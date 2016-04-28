@@ -1,0 +1,35 @@
+/* Empty. Add your own CSS if you like */
+
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+.scroll-content{
+ background: url('../img/kikoi.jpg'); 
+}
+
+.button-trans {
+	background-color: #46a346;
+}
+
+.button-trans.activated{
+	background-color: #198c19;
+}
+
+.button-later {
+	background-color: #fdbc43;
+}
+
+.button-later.activated {
+	background-color: #ff7b1c;
+}
+
+.button-skip {
+	background-color: #c62323;
+}
+
+.button-skip.activated {
+	background-color: #9e1c1c;
+}
+
+.button-center {
+	text-align: center;
+}

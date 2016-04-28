@@ -1,0 +1,24 @@
+<ion-view view-title="Untouched">
+
+	<ion-nav-buttons side="left">
+        <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
+    </ion-nav-buttons>
+
+	<ion-content>
+
+		<ion-list type="list-inset">
+			<ion-checkbox class="item-checkbox-right checkbox-dark" ng-model="untouched.checked" 
+			ng-checked="" ng-repeat="untouched in untouchedList track by untouched.id">
+				<h2>{{untouched.name}}</h2>
+			</ion-checkbox>
+		</ion-list>
+
+		<div class="padding">
+			<button class="button button-block button-dark" ng-click="save()">
+			  Save
+			</button>
+		</div>
+
+	</ion-content>
+
+</ion-view>
