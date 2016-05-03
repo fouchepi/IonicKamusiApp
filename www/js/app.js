@@ -122,12 +122,20 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', function($
   });*/
 
   $scope.update = function() {
-    $scope.newList = HomeStore.updateNewList();
-    $scope.untouchedList = HomeStore.getUntouchedList();    
-    $scope.disableCompleted = HomeStore.disableCompleted();    
+    //$scope.newList = HomeStore.updateNewList();
+    HomeStore.getNewPacksList().then(function(newPacksListReceived) {
+      $scope.newList = HomeStore.updateNewList(newPacksListReceived);
+    });
+
+    $scope.untouchedList = HomeStore.getUntouchedList(); 
+    $scope.activeList = HomeStore.getActiveList();
+
+        
     $scope.disableNew = HomeStore.disableNew();
     $scope.disableUntouched = HomeStore.disableUntouched();
-    //$scope.disableActive = HomeStore.disableActive();
+    $scope.disableActive = HomeStore.disableActive();
+
+    $scope.disableCompleted = HomeStore.disableCompleted();
   }
 
   $scope.update();
@@ -152,7 +160,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', function($
 
 app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($http, $state, $scope, HomeStore) {
 
-  $scope.packsList = HomeStore.updateNewList();
+  $scope.packsList = HomeStore.getNewList();
   
   $scope.refresh = function() {
     $scope.packsList = HomeStore.updateNewList();
@@ -167,11 +175,23 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
 
 app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scope, $state, HomeStore) {
   $scope.untouchedList = HomeStore.getUntouchedList();
-  console.log($scope.untouchedList);
+
+  $scope.goToWordsListFromUntouched = function(untouchedId) {
+    HomeStore.goToWordsListFromUntouched(untouchedId);
+    $state.go('app.wordsList', {categoryId: untouchedId})
+  };
 
   $scope.save = function() {
     HomeStore.saveUdpateUntouched();
     $state.go('app.mainList');
+  };
+
+  $scope.remove = function(itemId) {
+    HomeStore.removeUntouched(itemId);
+  };
+
+  $scope.data = {
+    showDelete: false
   };
   
 }]);
@@ -179,8 +199,17 @@ app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scop
 app.controller('CompletedCtrl', ['$scope', function($scope) {
 }]);
 
-app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', function($http, $scope, ListStore) {
+app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', function($http, $scope, ListStore, HomeStore) {
   $scope.mainList = ListStore.categoryList();
+
+  $scope.remove = function(categoryId) {
+    ListStore.removeCategory(categoryId);
+  };
+
+  $scope.data = {
+    showDelete: false
+  };
+
 }]);
 
 app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', function($scope, $state, ListStore) {
@@ -204,6 +233,17 @@ app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory
       $state.go('app.wordsList', {categoryId: categoryId});
     }
  };
+
+  $scope.later = function() {
+
+    //ListStore.later($scope.category.id, $scope.word);
+
+    if ($scope.word.id != $scope.category.wordsList.length) {
+      $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
+    } else {
+      $state.go('app.wordsList', {categoryId: categoryId});
+    }
+  };
 
 }]);
 

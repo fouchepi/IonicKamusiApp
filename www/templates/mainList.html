@@ -3,12 +3,21 @@
 	<ion-nav-buttons side="left">
         <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
     </ion-nav-buttons>
+    <!--<ion-nav-buttons side="right">
+    	<button class="button button-icon button-clear ion-close-circled" ng-click="data.showDeleteButton = !data.showDeleteButton"></button>
+    </ion-nav-buttons>-->
 
 	<ion-content class="has-header">
-		<ion-list type="list-inset">
-			<ion-item href="#/app/wordsList/{{category.id}}" class="item item-button-right" ng-repeat="category in mainList track by category.id">
+		<ion-list type="list-inset" show-delete="data.showDeleteButton" show-reorder="data.showDeleteButton">
+			<ion-item href="#/app/wordsList/{{category.id}}" class="item-remove-animate item-icon-right" ng-repeat="category in mainList track by category.id">
 				<h2>{{category.enName}}</h2>
-				<button class="button button-assertive" ng-click="remove(category.id)"><i class="icon ion-close-round"></i></button>
+				<div class="icon">
+					<a class="ion-compose dark" href="#/app/wordsList/{{category.id}}"></a>
+					&nbsp; &nbsp;
+					<a class="ion-eye-disabled dark" ng-click="remove(category.id)"></a>
+				</div>	
+				<!--<ion-delete-button class="ion-close-circled icon" ng-click="remove(category.id)"></ion-delete-button>
+				<ion-reorder-button class="ion-eye-disabled" ng-click="remove(category.id)"></ion-reorder-button>-->
 			</ion-item>
 		</ion-list>
 	</ion-content>

@@ -7,7 +7,7 @@
 	<ion-content class="has-header">
 		<ion-list type="list-inset">
 			<ion-item href="#/app/wordTrans/{{category.id}}/{{word.id}}" class="item-icon-right" ng-repeat="word in category.wordsList track by word.id">
-				<h2>{{word.name}} - {{word.translation}}</h2>
+				<h2>{{word.name}} {{word.translation}}</h2>
 				<p>{{word.def}}</p>
 				<i class="icon ion-checkmark-round" ng-if="word.translation != ''"></i>
 				<i class="icon ion-close-round" ng-if="later"></i>

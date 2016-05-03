@@ -3,21 +3,44 @@
 	<ion-nav-buttons side="left">
         <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
     </ion-nav-buttons>
+    <!--<ion-nav-buttons side="right">
+    	<button class="button button-icon button-clear ion-close-circled" ng-click="data.showDeleteButton = !data.showDeleteButton"></button>
+    </ion-nav-buttons>-->
 
 	<ion-content>
 
-		<ion-list type="list-inset">
+		<!--<ion-list type="list-inset" ng-if="!data.showDeleteButton">
 			<ion-checkbox class="item-checkbox-right checkbox-dark" ng-model="untouched.checked" 
 			ng-checked="" ng-repeat="untouched in untouchedList track by untouched.id">
 				<h2>{{untouched.name}}</h2>
 			</ion-checkbox>
 		</ion-list>
 
-		<div class="padding">
+		<ion-list type="list-inset" ng-if="data.showDeleteButton" show-delete="data.showDeleteButton">
+			<ion-item class="item-remove-animate" ng-repeat="untouched in untouchedList track by untouched.id">
+				<h2>{{untouched.name}}</h2>
+				<ion-delete-button class="ion-close-circled icon" ng-click="remove(untouched.id)"></ion-delete-button>
+			</ion-item>
+		</ion-list>-->
+
+		<ion-list type="list-inset">
+			<ion-item class="item-remove-animate item-icon-right" ng-click="goToWordsListFromUntouched(untouched.id)" ng-repeat="untouched in untouchedList track by untouched.id">
+				<h2>{{untouched.name}}</h2>
+				<div class="icon">
+					<a class="ion-compose dark" ng-click="goToWordsListFromUntouched(untouched.id)"></a>
+					&nbsp; &nbsp;
+					<a class="ion-trash-b assertive" ng-click="remove(untouched.id)"></a>
+				</div>
+			</ion-item>
+		</ion-list>
+
+		<!--<div class="padding" ng-if="!data.showDeleteButton">
 			<button class="button button-block button-dark" ng-click="save()">
 			  Save
 			</button>
-		</div>
+		</div>-->
+
+
 
 	</ion-content>
 

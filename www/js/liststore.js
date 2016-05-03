@@ -1,11 +1,13 @@
 angular.module('kamusiapp.liststore', [])
 
-	.factory('ListStore', ['$http', function($http) {
+	.factory('ListStore', ['$http', 'HomeStore', function($http, HomeStore) {
 
-	  var mainList = [
-	      //new Category('1', [], 'Parts of the Body', 'Parties du Corps'),
-	      //new Category('2', [], 'Pets', 'Animaux de Compagnies')
-	    ];
+	//window.localStorage.clear();
+
+	  /*var mainList = [
+	      new Category('1', [], 'Parts of the Body', 'Parties du Corps'),
+	      new Category('2', [], 'Pets', 'Animaux de Compagnies')
+	    ];*/
 
 	    /*mainList[0].wordsList.push(new WordsList('1','Head', 'Ceci est la definition de la tête', ''));
 	    mainList[0].wordsList.push(new WordsList('2','Hair', 'Ceci est la definition des cheveux', ''));
@@ -22,7 +24,6 @@ angular.module('kamusiapp.liststore', [])
 	    this.frName = frName;
 	  }
 
-	  //
 	  function WordsList(id, name, def, translation) {
 	    this.id = id;
 	    this.name = name;
@@ -30,7 +31,7 @@ angular.module('kamusiapp.liststore', [])
 	    this.translation = translation;
 	  }
 
-		//var mainList = angular.fromJson(window.localStorage['mainList'] || '[]');	  
+	var mainList = angular.fromJson(window.localStorage['mainList'] || '[]');	  
 
 	  function persist() {
 	  	window.localStorage['mainList'] = angular.toJson(mainList);
@@ -43,6 +44,8 @@ angular.module('kamusiapp.liststore', [])
 	  	},
 
 	    categoryList: function() {
+	    	mainList = HomeStore.getActiveList();
+	    	persist();
 	      return mainList;
 	    },
 
@@ -74,13 +77,13 @@ angular.module('kamusiapp.liststore', [])
 	      }      
 	    },
 
-	    testDoublon: function(id) {
+	    /*testDoublon: function(id) {
 	    	for(var i = 0; i < mainList.length; i++) {
 	    		if(mainList[i].id == id) {
 	    			return true;
 	    		}
 	    	}
-	    },
+	    },*/
 
 	    addCategory: function(id, array, enName, frName) {
 			    mainList.push(new Category(id, array, enName, frName));
@@ -91,7 +94,9 @@ angular.module('kamusiapp.liststore', [])
 	    removeCategory: function(categoryId) {
 	    	for(var i = 0; i < mainList.length; i++) {
 	    		if(mainList[i].id == categoryId) {
+	    			HomeStore.addToUntouched(mainList[i].id, mainList[i].enName);
 	    			mainList.splice(i, 1);
+	    			HomeStore.removeActive(categoryId);
 	    			persist();
 	    			return;
 	    		}
