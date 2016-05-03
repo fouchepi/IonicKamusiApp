@@ -9,13 +9,7 @@ angular.module('kamusiapp.homestore', [])
 		this.name = name;
 	}
 
-	var newPacksList = angular.fromJson(window.localStorage['newPacksList'] || '[]');	
-	/*newPacksList.push(new Pack('1', 'Parts of the Body'));
-	newPacksList.push(new Pack('2', 'Pets'));	
-	newPacksList.push(new Pack('3', 'Cars'));	
-	newPacksList.push(new Pack('4', 'Foods'));	
-	newPacksList.push(new Pack('5', 'Clothes'));*/
-
+	var newPacksList = angular.fromJson(window.localStorage['newPacksList'] || '[]');
 	var oldPacksList = angular.fromJson(window.localStorage['oldPacksList'] || '[]'); 
 	var newList = angular.fromJson(window.localStorage['newList'] || '[]');
 	var activeList = angular.fromJson(window.localStorage['activeList'] || '[]');	
@@ -48,19 +42,7 @@ angular.module('kamusiapp.homestore', [])
 
 	var apiUrl = 'http://lsir-kamusi.epfl.ch:3000/mobile';
 
-	/*function getNewPacksList() {
-		var promise = $http.get(apiUrl + '/packs').then(function(response) {
-			return response.data;
-		});
-		promise.then(function(newPacksListReceived) {
-			newPacksList = newPacksListReceived;
-			saveNewPacksList();
-			console.log(newPacksList);
-		});
-		console.log(newPacksList);
-	}*/
-
-	function getWordsList(packName) {
+	/*function getWordsList(packName) {
 		return $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
 			return response.data;
 		});
@@ -83,7 +65,7 @@ angular.module('kamusiapp.homestore', [])
 	    	wordsList.push(new WordsList('4','Turtle', 'Ceci est la definition de tortue', ''));			
 		}
 		return wordsList;
-	}
+	}*/
 
 	  function Category(id, wordsList, enName, frName) {
 	    this.id = id;
@@ -99,40 +81,18 @@ angular.module('kamusiapp.homestore', [])
 	    this.translation = translation;
 	  }
 
-	/*var testUrl = 'http://www.reddit.com/r/Android/new/.json';
-
-	var stories = angular.fromJson(window.localStorage['lastAllPacks'] || '[]');
-
-	function saveLastAllPacks() {
-		window.localStorage['lastAllPacks'] = angular.toJson(stories);
-	}
-
-	function testRedditList() {
-			$http.get(testUrl).then(function(response) {
-				return response.data;
-			}).then(function(response) {
-    			angular.forEach(response.data.children, function(child) {
-      			stories.push(child.data);
-    			});
-  			});
-
-  			saveLastAllPacks();
-  			var test = angular.fromJson(window.localStorage['lastAllPacks']);
-  			console.log(test);
-  			console.log(stories);
-	}*/
-
 	return {
-
-		/*getStories: function() {
-			testRedditList();
-			return stories;
-		},*/
 
 		getNewPacksList: function() {
 	  		return $http.get(apiUrl + '/packs').then(function(response) {
 	      		return response.data;
 	      	});
+		},
+
+		getWordsList: function(packName) {
+			return $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
+				return response.data;
+			});
 		},
 
 		getUntouchedList: function() {
@@ -153,34 +113,6 @@ angular.module('kamusiapp.homestore', [])
 
 		getCompletedList: function() {
 			return activeList;
-		},
-
-		disableActive: function() {
-			if(activeList.length == 0) {
-				return true;
-			} else {
-				return false;
-			}
-		},
-
-		/*activeListLength: function() {
-			return ListStore.categoryList().length;
-		},*/
-
-		disableNew: function() {
-			if(newList.length == 0) {
-				return true;
-			} else {
-				return false;
-			}
-		},
-
-		disableUntouched: function() {
-			if(untouchedList.length == 0) {
-				return true;
-			} else {
-				return false;
-			}
 		},
 
 		disableCompleted: function() {
@@ -218,10 +150,9 @@ angular.module('kamusiapp.homestore', [])
 			for(var i = 0; i < untouchedList.length; i++) {
 				if(untouchedList[i].id == untouchedId) {
 					//var wordsList = getWordsList(newList[i].name);
-					var wordsList = getWordsList2(untouchedList[i].name);
+					//var wordsList = getWordsList2(untouchedList[i].name);
 					activeList.push(new Category(untouchedList[i].id, wordsList, untouchedList[i].name, ''));
 					untouchedList.splice(i, 1);
-					//ListStore.addCategory(newList[i].id, wordsList, newList[i].name, '');
 				}
 			}
 			saveActiveList();
@@ -236,10 +167,8 @@ angular.module('kamusiapp.homestore', [])
 			for(var i = 0; i < newList.length; i++) {
 				if(newList[i].checked) {
 					//var wordsList = getPromise(newList[i].name);
-					//console.log(wordsList);
-					var wordsList = getWordsList2(newList[i].name);
+					//var wordsList = getWordsList2(newList[i].name);
 					activeList.push(new Category(newList[i].id, wordsList, newList[i].name, ''));
-					//ListStore.addCategory(newList[i].id, wordsList, newList[i].name, '');
 				} else {
 					untouchedList.push(new Pack(newList[i].id, newList[i].name));
 				}
@@ -256,7 +185,6 @@ angular.module('kamusiapp.homestore', [])
 			for(var i = 0; i < lengthTemp; i++) {
 				if(untouchedList[i].checked) {
 					activeList.push(new Category(untouchedList[i].id, '[]', untouchedList[i].name, ''));
-					//ListStore.addCategory(untouchedList[i].id, '[]', untouchedList[i].name, '');
 				} else {
 					untouchedTemp.push(new Pack(untouchedList[i].id, untouchedList[i].name));
 				}
@@ -278,6 +206,7 @@ angular.module('kamusiapp.homestore', [])
 			saveNewPacksList();
 			var tempNew = [];
 			var tempOld = angular.fromJson(window.localStorage['oldPacksList'] || '[]');
+
 			for (var i = 0; i < newPacksList.length; i++) {
 				var notActive = true;
 				for (var j = 0; j < tempOld.length; j++) {
@@ -291,6 +220,7 @@ angular.module('kamusiapp.homestore', [])
 					tempNew.push(new Pack(newPacksList[i].id, newPacksList[i].name));
 				}
 			}
+
 			newList = tempNew;
 			saveNewList();
 			return newList;

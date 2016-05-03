@@ -99,7 +99,7 @@ app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
 app.controller('AppCtrl', ['$scope', function($scope) {
 }]);
 
-app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', function($scope, HomeStore, $state, $http) {
+app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPopup', function($scope, HomeStore, $state, $http, $ionicPopup) {
   
   //only this line works with homestore
   //$scope.stories = HomeStore.getStories();
@@ -120,20 +120,26 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', function($
       console.log($scope.stories);
     });
   });*/
+  $scope.showAlert = function() {
+    $ionicPopup.alert({
+      title: 'Error',
+      content: 'No access to the server, please try to update later !'
+    }).then(function(res) {
+      console.log('Close Alert Box');
+    });
+  };
 
   $scope.update = function() {
-    //$scope.newList = HomeStore.updateNewList();
     HomeStore.getNewPacksList().then(function(newPacksListReceived) {
       $scope.newList = HomeStore.updateNewList(newPacksListReceived);
+    }).catch(function(err) {
+      console.error(err);
+      $scope.showAlert();
+      $scope.newList = HomeStore.getNewList(); 
     });
 
     $scope.untouchedList = HomeStore.getUntouchedList(); 
     $scope.activeList = HomeStore.getActiveList();
-
-        
-    $scope.disableNew = HomeStore.disableNew();
-    $scope.disableUntouched = HomeStore.disableUntouched();
-    $scope.disableActive = HomeStore.disableActive();
 
     $scope.disableCompleted = HomeStore.disableCompleted();
   }
