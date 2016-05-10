@@ -4,11 +4,6 @@ angular.module('kamusiapp.homestore', [])
 
 	window.localStorage.clear();
 
-	function Pack(id, name) {
-		this.id = id;
-		this.name = name;
-	}
-
 	var newPacksList = angular.fromJson(window.localStorage['newPacksList'] || '[]');
 	var oldPacksList = angular.fromJson(window.localStorage['oldPacksList'] || '[]'); 
 	var newList = angular.fromJson(window.localStorage['newList'] || '[]');
@@ -42,44 +37,38 @@ angular.module('kamusiapp.homestore', [])
 
 	var apiUrl = 'http://lsir-kamusi.epfl.ch:3000/mobile';
 
-	/*function getWordsList(packName) {
-		return $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
-			return response.data;
-		});
-
-		return promise.then(function(wordsListReceived) {
-			return wordsListReceived;
-			console.log(wordsListReceived)
-		});
-	}
-
-	function getWordsList2(packName) {
-		var wordsList = [];		
-		if (packName === 'Parts of the Body') {
-			wordsList.push(new WordsList('1','Head', 'Ceci est la definition de la tête', ''));
-			wordsList.push(new WordsList('2','Hair', 'Ceci est la definition des cheveux', ''));
-		} else if (packName === 'Pets') {
-	    	wordsList.push(new WordsList('1','Dog', 'Ceci est la definition de chien', ''));
-	    	wordsList.push(new WordsList('2','Cat', 'Ceci est la definition de chat', ''));
-	    	wordsList.push(new WordsList('3','Horse', 'Ceci est la definition de cheveaux', ''));
-	    	wordsList.push(new WordsList('4','Turtle', 'Ceci est la definition de tortue', ''));			
-		}
-		return wordsList;
-	}*/
-
-	  function Category(id, wordsList, enName, frName) {
-	    this.id = id;
-	    this.wordsList = wordsList;
-	    this.enName = enName;
-	    this.frName = frName;
-	  }
-
-	  function WordsList(id, name, def, translation) {
-	    this.id = id;
+	  function Category(name, wordsList, translations, language, id) {
 	    this.name = name;
-	    this.def = def;
-	    this.translation = translation;
+	    this.wordsList = wordsList;
+	    this.translations = translations;
+	    this.language = language;
+	    this.id = id;
 	  }
+
+	  function Translation(termId, dstLanguage, translation) {
+	  	this.termId = termId;
+	  	this.dstLanguage = dstLanguage;
+	  	this.translation = translation;
+	  }
+
+	  /*function WordsList(language, term, translation, id) {
+	    this.language = language;
+	    this.term = term;
+	    this.translation = translation;
+	    this.id = id;
+	  }*/
+
+	  /*function getWordsList(packName) {
+	  	console.log(packName);
+	  	var p = $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
+	  		console.log(response.data);
+	  		return response.data;
+	  		
+	  	});
+	  	return p.then(function(wordsList) {
+      		return wordsList;
+    	});
+	  }*/
 
 	return {
 
@@ -88,6 +77,13 @@ angular.module('kamusiapp.homestore', [])
 	      		return response.data;
 	      	});
 		},
+
+		/*getWordsListTest: function() {
+	  		return $http.get(apiUrl + '/Vegetables/terms').then(function(response) {
+	  			console.log(response);
+	      		return response.data;
+	      	});
+		},*/
 
 		getWordsList: function(packName) {
 			return $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
@@ -151,7 +147,7 @@ angular.module('kamusiapp.homestore', [])
 				if(untouchedList[i].id == untouchedId) {
 					//var wordsList = getWordsList(newList[i].name);
 					//var wordsList = getWordsList2(untouchedList[i].name);
-					activeList.push(new Category(untouchedList[i].id, wordsList, untouchedList[i].name, ''));
+					activeList.push(new Category(untouchedList[i].name, wordsList, untouchedList[i].translations, untouchedList[i].language, untouchedList[i].id));
 					untouchedList.splice(i, 1);
 				}
 			}
@@ -167,10 +163,10 @@ angular.module('kamusiapp.homestore', [])
 			for(var i = 0; i < newList.length; i++) {
 				if(newList[i].checked) {
 					//var wordsList = getPromise(newList[i].name);
-					//var wordsList = getWordsList2(newList[i].name);
-					activeList.push(new Category(newList[i].id, wordsList, newList[i].name, ''));
+					//var wordsList = getWordsList(newList[i].name);
+					activeList.push(new Category(newList[i].name, wordsList, newList[i].translations, newList[i].language, newList[i].id));
 				} else {
-					untouchedList.push(new Pack(newList[i].id, newList[i].name));
+					untouchedList.push(new Category(newList[i].name, '[]', newList[i].translations, newList[i].language, newList[i].id));
 				}
 			}
 			saveActiveList();
@@ -184,9 +180,9 @@ angular.module('kamusiapp.homestore', [])
 			var untouchedTemp = [];
 			for(var i = 0; i < lengthTemp; i++) {
 				if(untouchedList[i].checked) {
-					activeList.push(new Category(untouchedList[i].id, '[]', untouchedList[i].name, ''));
+					activeList.push(new Category(newList[i].name, '[]', newList[i].translations, newList[i].language, newList[i].id));
 				} else {
-					untouchedTemp.push(new Pack(untouchedList[i].id, untouchedList[i].name));
+					untouchedTemp.push(new Category(untouchedList[i].name, '[]', untouchedList[i].translations, untouchedList[i].language, untouchedList[i].id));
 				}
 			}
 			untouchedList = untouchedTemp;
@@ -195,8 +191,19 @@ angular.module('kamusiapp.homestore', [])
 			return;
 		},
 
-		addToUntouched: function(id, name) {
-			untouchedList.push(new Pack(id, name));
+		saveInLocalOldPacksList: function() {
+			saveOldPacksList();
+			return;
+		},
+
+		addToActiveWithWordsList: function(name, wordsList, translations, language, id) {
+			activeList.push(new Category(name, wordsList, translations, language, id));
+			saveActiveList();
+			return;
+		},
+
+		addToUntouched: function(name, wordsList, translations, language, id) {
+			untouchedList.push(new Category(name, wordsList, translations, language, id));
 			saveUntouchedList();
 			return;
 		},
@@ -217,7 +224,7 @@ angular.module('kamusiapp.homestore', [])
 					}
 				}
 				if(notActive) {
-					tempNew.push(new Pack(newPacksList[i].id, newPacksList[i].name));
+					tempNew.push(new Category(newPacksList[i].name, [], [], newPacksList[i].language, newPacksList[i].id));
 				}
 			}
 

@@ -74,6 +74,7 @@ app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
 
   $stateProvider.state('app.wordsList', {
     url: '/wordsList/:categoryId',
+    cache: false,
     views: {
       'menuContent':{
         templateUrl: 'templates/wordsList.html',
@@ -84,6 +85,7 @@ app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
 
   $stateProvider.state('app.wordTrans', {
     url: '/wordTrans/:categoryId/:wordId',
+    cache: false,
     views: {
       'menuContent':{
         templateUrl: 'templates/wordTrans.html',
@@ -142,6 +144,9 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     $scope.activeList = HomeStore.getActiveList();
 
     $scope.disableCompleted = HomeStore.disableCompleted();
+
+    //console.log(HomeStore.getNewPacksList());
+    //console.log(HomeStore.getWordsListTest());
   }
 
   $scope.update();
@@ -173,7 +178,17 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
   }
 
   $scope.save = function() {
-    HomeStore.saveUdpate();
+
+    angular.forEach($scope.packsList, function(child) {
+      if(child.checked) {
+        HomeStore.getWordsList(child.name).then(function(wordsList) {
+          HomeStore.addToActiveWithWordsList(child.name, wordsList, child.translations, child.language, child.id);
+        });
+      } else {
+        HomeStore.addToUntouched(child.name, '[]', child.translations, child.language, child.id);
+      }
+    });
+    HomeStore.saveInLocalOldPacksList();
     $state.go('app.mainList');
   };
 
@@ -218,22 +233,61 @@ app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', fun
 
 }]);
 
-app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', function($scope, $state, ListStore) {
+app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', function($scope, $state, ListStore, $http) {
   $scope.category = ListStore.getCategory($state.params.categoryId);
+  ListStore.addAllEmptyTranslations($scope.category, 'français');
+  console.log($scope.category.translations);
+
+  $scope.save = function(wordId) {
+    var currentWordIndex = ListStore.getCurrentWordIndex($scope.category, wordId)
+    return ListStore.alreadyTranslate($scope.category, currentWordIndex);
+  };
+
+  $scope.postTranslation = function() {
+    //var translations = angular.toJson($scope.category.translations);
+    //console.log($scope.category.translations);
+
+    /*var test = ListStore.getTranslation2();
+
+    var url = 'http://lsir-kamusi.epfl.ch:3000/mobile/translate/json';
+    $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+
+    $http.post(url, {translations: test}).then(function(response) {
+      console.log(response);
+    }).catch(function(err) {
+      console.error(err.data);
+    });*/
+
+    ListStore.postTranslation($scope.category);
+    
+  };
 }]);
 
 app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory', function($scope, $state, ListStore, $ionicHistory) {
-  $scope.category = ListStore.getCategory($state.params.categoryId);
-  $scope.word = angular.copy(ListStore.getWordToTrans($state.params.categoryId, $state.params.wordId));
 
+  $scope.category = ListStore.getCategory($state.params.categoryId);
   var categoryId = $scope.category.id;
-  var nextWordId = parseInt($scope.word.id) + 1 + ''; 
+
+  $scope.word = ListStore.getWordToTrans($scope.category, $state.params.wordId);
+  $scope.currentWordIndex = ListStore.getCurrentWordIndex($scope.category, $scope.word.id);
+  $scope.currentWordNumber = parseInt($scope.currentWordIndex) + 1 + '';
+
+  var nextWordIndex = parseInt($scope.currentWordIndex) + 1 + ''; 
+
+  $scope.catTest = angular.copy(ListStore.getCategory($state.params.categoryId));
+
+  //$scope.translation = angular.copy(ListStore.getTranslation($scope.category, $scope.word.id));
 
   $scope.translate = function() {
-    
-    ListStore.add($scope.category.id, $scope.word);
-    
-    if ($scope.word.id != $scope.category.wordsList.length) {
+
+    /*console.log($scope.translation);
+    ListStore.addToTranslationList($scope.category, $scope.word.id, $scope.translation);
+    console.log($scope.category);*/
+
+    ListStore.updateCategory($scope.catTest);
+
+    if (nextWordIndex < $scope.category.wordsList.length) {
+      var nextWordId = ListStore.nextWordId($scope.category, nextWordIndex);
       $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
     } else {
       $state.go('app.wordsList', {categoryId: categoryId});
@@ -245,10 +299,23 @@ app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory
     //ListStore.later($scope.category.id, $scope.word);
 
     if ($scope.word.id != $scope.category.wordsList.length) {
+      var nextWordId = ListStore.nextWordId($scope.category, nextWordIndex);
       $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
     } else {
       $state.go('app.wordsList', {categoryId: categoryId});
     }
+  };
+
+  $scope.skip = function() {
+    var currentWordIndexTemp = $scope.currentWordIndex;
+    console.log($scope.category.wordsList[currentWordIndexTemp].term);
+    if ($scope.word.id != $scope.category.wordsList.length) {
+      var nextWordId = ListStore.nextWordId($scope.category, nextWordIndex);
+      $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
+    } else {
+      $state.go('app.wordsList', {categoryId: categoryId});
+    }
+    ListStore.skipWordsList($scope.category, currentWordIndexTemp);
   };
 
 }]);

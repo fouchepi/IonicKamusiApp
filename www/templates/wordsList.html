@@ -1,23 +1,23 @@
-<ion-view view-title="{{category.enName}}">
+<ion-view view-title="{{category.name}}">
 
 	<ion-nav-buttons side="left">
         <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
     </ion-nav-buttons>
 
-	<ion-content class="has-header">
+	<ion-content class="has-header has-footer">
 		<ion-list type="list-inset">
 			<ion-item href="#/app/wordTrans/{{category.id}}/{{word.id}}" class="item-icon-right" ng-repeat="word in category.wordsList track by word.id">
-				<h2>{{word.name}} {{word.translation}}</h2>
-				<p>{{word.def}}</p>
-				<i class="icon ion-checkmark-round" ng-if="word.translation != ''"></i>
+				<h2>{{word.term}}</h2>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+				tempor incididunt ut labore.</p>
+				<i class="icon ion-checkmark-round" ng-if="save(word.id)"></i>
 				<i class="icon ion-close-round" ng-if="later"></i>
-				<i class="icon ion-close-round" ng-if="iDontKnow"></i>
 			</ion-item>
 		</ion-list>
 	</ion-content>
 
-	<!--<div class="bar bar-footer bar-light" style="background: none">
-  		<button class="button button-block button-dark" style="margin-top: 0px">Go to Categories</button>
-	</div>-->
+	<div class="bar bar-footer bar-dark">
+  		<button class="button button-block button-dark" ng-click="postTranslation()" style="margin-top: 0px">Send Translation</button>
+	</div>
 
 </ion-view>

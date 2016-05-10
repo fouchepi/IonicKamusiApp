@@ -9,12 +9,12 @@
 
 	<ion-content class="has-header">
 		<ion-list type="list-inset" show-delete="data.showDeleteButton" show-reorder="data.showDeleteButton">
-			<ion-item href="#/app/wordsList/{{category.id}}" class="item-remove-animate item-icon-right" ng-repeat="category in mainList track by category.id">
-				<h2>{{category.enName}}</h2>
+			<ion-item href="#/app/wordsList/{{activePack.id}}" class="item-remove-animate item-icon-right" ng-repeat="activePack in mainList track by activePack.id">
+				<h2>{{activePack.name}}</h2>
 				<div class="icon">
-					<a class="ion-compose dark" href="#/app/wordsList/{{category.id}}"></a>
+					<a class="ion-compose dark" href="#/app/wordsList/{{activePack.id}}"></a>
 					&nbsp; &nbsp;
-					<a class="ion-eye-disabled dark" ng-click="remove(category.id)"></a>
+					<a class="ion-eye-disabled dark" ng-click="remove(activePack.id)"></a>
 				</div>	
 				<!--<ion-delete-button class="ion-close-circled icon" ng-click="remove(category.id)"></ion-delete-button>
 				<ion-reorder-button class="ion-eye-disabled" ng-click="remove(category.id)"></ion-reorder-button>-->

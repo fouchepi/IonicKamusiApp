@@ -1,4 +1,4 @@
-<ion-view view-title="{{category.enName}} - {{word.id}}/{{category.wordsList.length}}">
+<ion-view view-title="{{category.name}} - {{currentWordNumber}}/{{category.wordsList.length}}">
 	
 	<ion-nav-buttons side="left">
         <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
@@ -7,14 +7,15 @@
 	<ion-content>
 		<div class="padding card">
 	        <div>
-	          <h4 class="text-center">{{word.name}}</h4>
+	          <h4 class="text-center">{{word.term}}</h4>
 	          	<div class="padding">
-	            	{{word.def}}
+	            	Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+	            	tempor incididunt ut labore.
 	          	</div>
 	        </div>
 
 	        <label class="item item-input">
-	          <input type="text" placeholder="Translate" ng-model="word.translation">
+	          <input type="text" placeholder="Translate" id="input_text" ng-model="catTest.translations[currentWordIndex].translation">
 	        </label>
 
 	        <div class="button-bar">
