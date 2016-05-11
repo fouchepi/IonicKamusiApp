@@ -72,6 +72,12 @@ angular.module('kamusiapp.homestore', [])
 
 	return {
 
+		getNewPacksListAndWordsList: function() {
+			return $http.get(apiUrl + '/packs/all').then(function(response) {
+				return response.data;
+			});
+		},
+
 		getNewPacksList: function() {
 	  		return $http.get(apiUrl + '/packs').then(function(response) {
 	      		return response.data;

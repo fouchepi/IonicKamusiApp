@@ -103,25 +103,6 @@ app.controller('AppCtrl', ['$scope', function($scope) {
 
 app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPopup', function($scope, HomeStore, $state, $http, $ionicPopup) {
   
-  //only this line works with homestore
-  //$scope.stories = HomeStore.getStories();
-
-  //$scope.stories = [];
-
-  /*$http.get('http://www.reddit.com/r/Android/new/.json')
-    .success(function(response) {
-      angular.forEach(response.data.children, function(child) {
-        $scope.stories.push(child.data);
-      });
-    });*/
-
-
-  /*HomeStore.testRedditList().then(function(response) {
-    angular.forEach(response.data.children, function(child) {
-      $scope.stories.push(child.data);
-      console.log($scope.stories);
-    });
-  });*/
   $scope.showAlert = function() {
     $ionicPopup.alert({
       title: 'Error',
@@ -138,15 +119,13 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
       console.error(err);
       $scope.showAlert();
       $scope.newList = HomeStore.getNewList(); 
-    });
+    });  
 
     $scope.untouchedList = HomeStore.getUntouchedList(); 
     $scope.activeList = HomeStore.getActiveList();
 
     $scope.disableCompleted = HomeStore.disableCompleted();
 
-    //console.log(HomeStore.getNewPacksList());
-    //console.log(HomeStore.getWordsListTest());
   }
 
   $scope.update();
