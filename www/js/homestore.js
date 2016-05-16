@@ -70,7 +70,28 @@ angular.module('kamusiapp.homestore', [])
     	});
 	  }*/
 
+	  //*******************************TEST INTEGRATION LISTSTORE*************************************
+
+	  var countOfWordsTranslated = angular.fromJson(window.localStorage['countOfWordsTranslated'] || 0);
+
+	  function WordsList(language, term, id) {
+	    this.language = language;
+	    this.term = term;
+	    this.id = id;
+	  }
+
+	  function Translation(termId, dstLanguage, translation) {
+	  	this.termId = termId;
+	  	this.dstLanguage = dstLanguage;
+	  	this.translation = translation;
+	  }
+
 	return {
+
+		modifiedActiveList: function(list) {
+			activeList = list;
+			saveActiveList();
+		},
 
 		getNewPacksListAndWordsList: function() {
 			return $http.get(apiUrl + '/packs/all').then(function(response) {
@@ -114,7 +135,7 @@ angular.module('kamusiapp.homestore', [])
 		},
 
 		getCompletedList: function() {
-			return activeList;
+			return completedList;
 		},
 
 		disableCompleted: function() {
@@ -146,14 +167,13 @@ angular.module('kamusiapp.homestore', [])
 		},
 
 		/*In the untouched list, when an user click on an item, we go to the list of words of the clicked item.
-		Therefore we delete it from the untouched list and we add it to the active one
-		We also have to get the list of words of the pack from the server*/
+		Therefore we delete it from the untouched list and we add it to the active one*/
 		goToWordsListFromUntouched: function(untouchedId) {
 			for(var i = 0; i < untouchedList.length; i++) {
 				if(untouchedList[i].id == untouchedId) {
 					//var wordsList = getWordsList(newList[i].name);
 					//var wordsList = getWordsList2(untouchedList[i].name);
-					activeList.push(new Category(untouchedList[i].name, wordsList, untouchedList[i].translations, untouchedList[i].language, untouchedList[i].id));
+					activeList.push(new Category(untouchedList[i].name, untouchedList[i].wordsList, untouchedList[i].translations, untouchedList[i].language, untouchedList[i].id));
 					untouchedList.splice(i, 1);
 				}
 			}
@@ -208,10 +228,55 @@ angular.module('kamusiapp.homestore', [])
 			return;
 		},
 
+		addToActive: function(name, wordsList, translations, language, id) {
+			activeList.push(new Category(name, wordsList, translations, language, id));
+			saveActiveList();
+			return;			
+		},
+
 		addToUntouched: function(name, wordsList, translations, language, id) {
 			untouchedList.push(new Category(name, wordsList, translations, language, id));
 			saveUntouchedList();
 			return;
+		},
+
+		addToComplete: function(name, language, id) {
+			completedList.push(new Category(name, [], [], language, id));
+			saveCompletedList();
+			return;
+		},
+
+		updateNewList2: function(newPacksListReceived) {
+			newPacksList = newPacksListReceived;
+			saveNewPacksList();
+			var tempNew = [];
+			var tempOld = angular.fromJson(window.localStorage['oldPacksList'] || '[]');
+
+			for (var i = 0; i < newPacksList.length; i++) {
+				var notActive = true;
+				for (var j = 0; j < tempOld.length; j++) {
+					if (newPacksList[i].id == tempOld[j].id) {
+						notActive = (notActive && false);
+					} else {
+						notActive = (notActive && true);
+					}
+				}
+				if(notActive) {					
+					tempNew.push(new Category(newPacksList[i].p.name, newPacksList[i].wordlist, [], newPacksList[i].p.language, newPacksList[i].p.id));
+				}
+			}
+
+			for(var i = 0; i < tempNew.length; i++) {
+				var packTemp = tempNew[i];
+		    	for(var j = 0; j < packTemp.wordsList.length; j++) {
+		    		packTemp.translations.push(new Translation(packTemp.wordsList[j].id, 'français', ''));
+		    	}
+		    	tempNew[i] = packTemp;
+		    }
+
+			newList = tempNew;
+			saveNewList();
+			return newList;
 		},
 
 		updateNewList: function(newPacksListReceived) {
@@ -237,7 +302,9 @@ angular.module('kamusiapp.homestore', [])
 			newList = tempNew;
 			saveNewList();
 			return newList;
-		}
+		},
+
+		//******************** TEST INTEGRATION LISTSTORE **********************************
 	};
 
 }]);

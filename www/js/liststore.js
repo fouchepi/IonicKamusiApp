@@ -24,6 +24,8 @@ angular.module('kamusiapp.liststore', [])
 	    this.frName = frName;
 	  }*/
 
+	  var countOfWordsTranslated = angular.fromJson(window.localStorage['countOfWordsTranslated'] || 0);
+
 	  function WordsList(language, term, id) {
 	    this.language = language;
 	    this.term = term;
@@ -47,13 +49,36 @@ angular.module('kamusiapp.liststore', [])
 		window.localStorage['mainList'] = angular.toJson(mainList);
 	}
 
+	function saveCount() {
+		window.localStorage['countOfWordsTranslated'] = angular.toJson(countOfWordsTranslated);
+	}
+
+	function addToComplete(category) {
+		if(category.wordsList.length == 0) {
+			HomeStore.addToComplete(category.name, category.language, category.id);
+			var mainListTemp = [];
+			for(var i = 0; i < mainList.length; i++) {
+				if(mainList[i].id != category.id) {
+					mainListTemp.push(new Category(mainList[i].name, mainList[i].wordsList, mainList[i].translations, mainList[i].language, mainList[i].id));
+				}
+			}
+			mainList = mainListTemp;
+			HomeStore.modifiedActiveList(mainList);
+			persist();
+		}
+	}
+
 	var apiUrl = 'http://lsir-kamusi.epfl.ch:3000/mobile';
 
 	return {
 
-		/*testRedditList: function() {
-			return redditList;
-		},*/
+		getCountOfWordsTranslated: function() {
+			return countOfWordsTranslated;
+		},
+
+		getLanguageUser: function() {
+			return 'français';
+		},
 
 		postTranslation: function(category) {
 			//$http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
@@ -70,9 +95,17 @@ angular.module('kamusiapp.liststore', [])
 					translationsToSend.push(new Translation(category.translations[i].termId, category.translations[i].dstLanguage, category.translations[i].translation));
 				}
 			}
-			category.translations = translationsTemp;
-			category.wordsList = wordsListTemp;
+
+			for(var i = 0; i < mainList.length; i++) {
+				if(mainList[i].id == category.id) {
+					mainList[i].translations = translationsTemp;
+					mainList[i].wordsList = wordsListTemp;
+				}
+			}
 			persist();
+
+			countOfWordsTranslated = countOfWordsTranslated + translationsToSend.length;
+			saveCount();
 
 		    $http.post(apiUrl + "/translate/json", {translations: translationsToSend}).then(function(response) {
 		      console.log(response);
@@ -90,8 +123,10 @@ angular.module('kamusiapp.liststore', [])
 		},
 
 	    categoryList: function() {
-	    	mainList = HomeStore.getActiveList();
-	    	persist();
+	    	if(mainList.length == 0) {
+	    		mainList = HomeStore.getActiveList();
+	    		persist();
+	    	}	
 	      return mainList;
 	    },
 
@@ -156,26 +191,22 @@ angular.module('kamusiapp.liststore', [])
 	    */
 	    updateCategory: function(category) {
 	    	for(var i = 0; mainList.length; i++) {
-	    		if(mainList[i].id = category.id) {
+	    		if(mainList[i].id == category.id) {
 	    			mainList[i] = category;
 	    			return;
 	    		}
 	    	}
 	    },
 
-	    addAllEmptyTranslations: function(category, language) {
-	    	if(category.translations.length == 0) {
-		    	for(var i = 0; i < category.wordsList.length; i++) {
-		    		category.translations.push(new Translation(category.wordsList[i].id, language, ''));
-		    	}
-		    }
-		    persist();
-	    },
-
 	    skipWordsList: function(category, index) {
-	    	category.wordsList.splice(index, 1);
-	    	category.translations.splice(index, 1);
+	    	for(var i = 0; i < mainList.length; i++) {
+	    		if(mainList[i].id == category.id) {
+	    			mainList[i].wordsList.splice(index, 1);
+	    			mainList[i].translations.splice(index, 1);
+	    		}
+	    	}
 	    	persist();
+	    	addToComplete(category);
 	    },
 
 	    alreadyTranslate: function(category, index) {

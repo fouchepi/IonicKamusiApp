@@ -5,12 +5,11 @@
     </ion-nav-buttons>
 
 	<ion-content class="has-header">
-		<!--<ion-list type="list-inset">
-			<ion-item href="#/app/wordsList/{{category.id}}" class="item-icon-right" ng-repeat="category in mainList track by category.id">
-				<h2>{{category.enName}}</h2>
-				<ion-option-button class="icon-center button-assertive ion-close-round" ng-click="remove(category.id)"></ion-option-button>
+		<ion-list type="list-inset">
+			<ion-item class="item-icon-right" ng-repeat="completed in completedList track by completed.id">
+				<h2>{{completed.name}}</h2>
 			</ion-item>
-		</ion-list>-->
+		</ion-list>
 	</ion-content>
 
 </ion-view>
