@@ -5,6 +5,45 @@
     </ion-nav-buttons>
 
 	<ion-content>
+
+		<div class="card" ng-if="firstTime"><h4 class="text-center"> Please add a language</h4></div>
+
+		<ion-list type="list-inset">
+			<ion-radio ng-repeat="item in languages" ng-value="item.name" ng-model="data.name" ng-change="changeLanguage(item)">{{item.name}}</ion-radio>
+		</ion-list>
+
+		<div class="padding">
+			<button class="button button-block button-dark" ng-click="modal.show()">
+				  Add Language
+			</button>
+		</div>
+
+   <script id="templates/modal.html" type="text/ng-template">
+   		<!-- style="width: 90%; height: 70%; min-height: 0; top: 10%; left: 5%; right: 5%; bottom: 20%;" -->
+      <ion-modal-view>
+        <ion-header-bar class="bar bar-header bar-dark">
+     		<button class="button icon ion-android-search" ng-click="showFilterBar()"></button>
+          <h1 class="title">Languages</h1>
+          <button class="button button-clear button-primary" ng-click="modal.hide()">Cancel</button>
+        </ion-header-bar>
+
+        <ion-content class="padding">
+        	<ion-list ng-if="test">
+          		<ion-item ng-repeat="item in list | limitTo:50" ng-click="onClick(item)">
+            	<p>{{item.name}}</p>
+          	</ion-item>
+        </ion-list>
+        </ion-content>
+
+        <div ng-if="list !== undefined && !list.length" class="no-results">
+          <p>No Results</p>
+        </div> 
+
+      </ion-modal-view>
+    </script>
+
+
+
 	</ion-content>
 
 </ion-view>
