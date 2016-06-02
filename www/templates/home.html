@@ -4,7 +4,7 @@
         <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
     </ion-nav-buttons>
     <ion-nav-buttons side="right">
-    	<button class="button button-icon button-clear ion-ios-loop-strong" ng-click="update()"></button>
+    	<button class="button button-icon button-clear ion-ios-loop-strong" ng-click="update(currentLanguage)"></button>
     </ion-nav-buttons>
 
 	<ion-content>
@@ -35,7 +35,7 @@
 			  <span class="badge badge-energized">{{untouchedList.length}}</span>
 			</button>
 
-			<button class="button button-block button-dark" ng-click="completed()" ng-disabled="disableCompleted">
+			<button class="button button-block button-dark" ng-click="completed()" ng-disabled="completedList.length == 0">
 			  Completed
 			</button>
 

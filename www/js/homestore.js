@@ -1,6 +1,6 @@
 angular.module('kamusiapp.homestore', ['ngCordova'])
 
-	.factory('HomeStore', ['$http', '$cordovaSQLite', '$ionicPlatform', '$q', function($http, $cordovaSQLite, $ionicPlatform, $q) {
+	.factory('HomeStore', ['$http', '$cordovaSQLite', '$ionicPlatform', '$q',  'LocalDB', function($http, $cordovaSQLite, $ionicPlatform, $q, LocalDB) {
 
 	//window.localStorage.clear();
 
@@ -45,30 +45,21 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    this.id = id;
 	  }
 
+	  function Category2(cawl_H_ID, has_parent, name, wordsList, translations, language, id) {
+	  	this.cawl_H_ID = cawl_H_ID;
+	  	this.has_parent = has_parent;
+	    this.name = name;
+	    this.wordsList = wordsList;
+	    this.translations = translations;
+	    this.language = language;
+	    this.id = id;
+	  }
+
 	  function Translation(termId, dstLanguage, translation) {
 	  	this.termId = termId;
 	  	this.dstLanguage = dstLanguage;
 	  	this.translation = translation;
 	  }
-
-	  /*function WordsList(language, term, translation, id) {
-	    this.language = language;
-	    this.term = term;
-	    this.translation = translation;
-	    this.id = id;
-	  }*/
-
-	  /*function getWordsList(packName) {
-	  	console.log(packName);
-	  	var p = $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
-	  		console.log(response.data);
-	  		return response.data;
-	  		
-	  	});
-	  	return p.then(function(wordsList) {
-      		return wordsList;
-    	});
-	  }*/
 
 	  //*******************************TEST INTEGRATION LISTSTORE*************************************  
 
@@ -90,7 +81,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		if(pack.wordsList.length == 0) {
 
 			completedList.push(new Category(pack.name, [], [], pack.language, pack.id));
-			updateElemInTable('completedList', selectedLanguage, completedList);
+			//updateElemInTable('completedList', selectedLanguage, completedList);
 			//saveCompletedList();
 
 			var activeListTemp = [];
@@ -101,14 +92,14 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			}
 			activeList = activeListTemp;
 			console.log(activeList);
-			updateElemInTable('activeList', selectedLanguage, activeList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
 			//saveActiveList();
 		}
 	}
 
 	//**********************Test SqlLite WebSql ***************************
 
-	var db = null;
+	/*var db = null;
 	var dbName = "kamusiLocal.db";
 
 	function useWebSql() {
@@ -187,13 +178,13 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 				if(results.rows.length > 0) {
 					temp = results.rows.item(0).language;
 
-					/*newPacksList = (getElem2('newPacksList', temp) || []);
-					oldPacksList = (getElem2('oldPacksList', temp) || []);
-					newList = (getElem2('newList', temp) || []);
-					activeList = (getElem2('activeList', temp) || []);
-					untouchedList = (getElem2('untouchedList', temp) || []);
-					completedList = (getElem2('completedList', temp) || []);
-					countOfWordsTranslated = (getElem2('countOfWordsTranslated', temp) || []);*/
+					//newPacksList = (getElem2('newPacksList', temp) || []);
+					//oldPacksList = (getElem2('oldPacksList', temp) || []);
+					//newList = (getElem2('newList', temp) || []);
+					//activeList = (getElem2('activeList', temp) || []);
+					//untouchedList = (getElem2('untouchedList', temp) || []);
+					//completedList = (getElem2('completedList', temp) || []);
+					//countOfWordsTranslated = (getElem2('countOfWordsTranslated', temp) || []);
 					return temp;
 				}
 			}, function (err) {
@@ -294,18 +285,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	        });
 	    });
 	}	
-
-	function initTable(language) {
-		insertTable('newPacksList', language);
-		insertTable('oldPacksList', language);
-		insertTable('newList', language);
-		insertTable('activeList', language);
-		insertTable('untouchedList', language);
-		insertTable('completedList', language);
-		insertTable('countOfWordsTranslated', language);		
-	}
-
-
+		
 		var languagesSelect = [];
   		var selectedLanguage = '';
 		
@@ -315,9 +295,66 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		var activeList = [];
 		var untouchedList = [];
 		var completedList = [];
-		var countOfWordsTranslated = [];
+		var countOfWordsTranslated = [];*/
 
+		function getCurrentLanguage() {
+			var parameters = [1];
+			return LocalDB.query('SELECT language FROM currentLanguage where id = ?', parameters).then(function(result) {
+				if(result.rows.length > 0) {
+					return LocalDB.getById(result);
+				}				
+			});
+		}
 
+		function getAllLanguages() {
+			return LocalDB.query('SELECT * FROM languages').then(function(result) {
+				return LocalDB.getAll(result);
+			});
+		}
+
+		function getElem(name, language) {
+			var parameters = [language];
+			return LocalDB.query('SELECT elem FROM ' + name + ' where language = ?', parameters).then(function(result) {
+				if(result.rows.length > 0) {
+					return LocalDB.getByLanguage(result);
+				}
+			});
+		}
+
+		function updateCurrentLanguage(language, code) {
+			var parameters = [language, code, 1];
+			return LocalDB.query('UPDATE currentLanguage set language = ?, code = ? where id = ?', parameters);
+		}
+
+		function updateElem(name, language, elem) {
+			var parameters = [angular.toJson(elem), language];
+			return LocalDB.query('UPDATE ' + name + ' set elem = ? where language = ?', parameters);
+		}
+
+		function insertCurrentLanguage(language, code) {
+			var parameters = [language, code];
+			return LocalDB.query('INSERT INTO currentLanguage (language, code) VALUES(?, ?)', parameters);
+		}
+
+		function insertLanguages(language, code) {
+			var parameters = [language, code];
+			return LocalDB.query('INSERT INTO languages (language, code) VALUES(?, ?)', parameters);
+		}
+
+		function insertElem(name, language) {
+			var parameters = [language, '[]'];
+			return LocalDB.query('INSERT INTO ' + name + ' (language, elem) VALUES(?, ?)', parameters);
+		}
+
+		function initTable(language) {
+			insertElem('newPacksList', language);
+			insertElem('oldPacksList', language);
+			insertElem('newList', language);
+			insertElem('activeList', language);
+			insertElem('untouchedList', language);
+			insertElem('completedList', language);
+			insertElem('countOfWordsTranslated', language);		
+		}
 
 		/*var languagesSelect = (getAllLanguage() || []);
   		var selectedLanguage = (getCurrentLanguage() || '');
@@ -330,11 +367,10 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		var completedList = (getElem2('completedList', selectedLanguage) || []);
 		var countOfWordsTranslated = (getElem2('countOfWordsTranslated', selectedLanguage) || []);*/
 
-
 	//*********************** Language **************************
 
-	function Language(language, code) {
-	  	this.language = language;
+	function Language(name, code) {
+	  	this.name = name;
 	  	this.code = code;
 	}	
 
@@ -349,17 +385,11 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
   	languagesSearch.push(new Language('Spanish', 'spa'));
   	languagesSearch.push(new Language('Swedish', 'swe'));*/
 
-
-  	/*$http.get('json/languages.json').success(function (data) {
-		languagesSearch = data;
-    });*/
-
 	//*********************** RETURN ****************************
 
 	return {
 
-		getAllElemForLanguage: function(language) {
-			console.log('in getAllElemFor' + language);
+		/*getAllElemForLanguage: function(language) {
 			return $q.all([
 				getElem('newPacksList', language, newPacksList),
 				getElem('oldPacksList', language, oldPacksList),
@@ -369,10 +399,10 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 				getElem('completedList', language, completedList),
 				getElem('countOfWordsTranslated', language, countOfWordsTranslated)
 				]);
-		},
+		},*/
 
 
-		getCurrentLanguageTest: function(callback) {
+		/*getCurrentLanguageTest: function(callback) {
 			$ionicPlatform.ready(function () {
 				var temp = '';
 				$cordovaSQLite.execute(db, 'SELECT language FROM currentLanguage where id = ?', [1]).then(function(results) {
@@ -384,11 +414,13 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		            console.error(err);
 		        });
 		    });		
-		},
+		},*/
 
 
-		initLanguage: function(callback) {
-			$ionicPlatform.ready(function () {
+		getLanguages: function() {
+			return getAllLanguages();
+
+			/*$ionicPlatform.ready(function () {
 				$cordovaSQLite.execute(db, 'SELECT * FROM languages').then(function(results) {
 					var temp = false;
 					if(results.rows.length > 0) {
@@ -400,95 +432,73 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 				}, function(err) {
 				       console.error(err);
 				    });
+			});*/
+		},
+
+		initCurrentLanguages: function() {
+			return insertCurrentLanguage('', '');
+		},
+
+
+		addToLanguages: function(item) {
+			insertLanguages(item.name, item.code);
+			initTable(item.name);
+		},
+
+		changeLanguage: function(item) {
+			updateCurrentLanguage(item.language, item.code);
+		},
+
+		modifiedActiveList: function(list) {
+			activeList = list;
+			//updateElemInTable('activeList', selectedLanguage, activeList);
+			//saveActiveList();
+		},
+
+		getNewPacksListAndWordsList: function() {
+			return $http.get(apiUrl + '/packs/eng/all').then(function(response) {
+				return response.data;
 			});
 		},
 
 		getCurrentLanguage: function() {
-			return selectedLanguage;
+			return getCurrentLanguage();
 		},
 
 		getLanguagesSearch: function(callback) {
 		  	$http.get('json/languages.json').success(function (data) {
 				callback(data);
 		    });
-		},
+		},		
 
-		getLanguagesSelect: function() {
-			return languagesSelect;
-		},
-
-		addToLanguages: function(item) {
-			insertLanguage(item.name, item.code);
-			addToLanguages(item);
-		},
-
-		changeLanguage: function(item) {
-			if(selectedLanguage == '') {
-				initializeCurrentLanguage(item.name, item.code);
-			} else {
-				updateCurrentLanguage(item.name, item.code);
-			}
-			selectedLanguage = item.name;
-
-		},
-
-		modifiedActiveList: function(list) {
-			activeList = list;
-			updateElemInTable('activeList', selectedLanguage, activeList);
-			//saveActiveList();
-		},
-
-		getNewPacksListAndWordsList: function() {
-			return $http.get(apiUrl + '/packs/all').then(function(response) {
-				return response.data;
-			});
-		},
-
-		getNewPacksList: function() {
+		/*getNewPacksList: function() {
 	  		return $http.get(apiUrl + '/packs').then(function(response) {
-	      		return response.data;
-	      	});
-		},
-
-		/*getWordsListTest: function() {
-	  		return $http.get(apiUrl + '/Vegetables/terms').then(function(response) {
-	  			console.log(response);
 	      		return response.data;
 	      	});
 		},*/
 
-		getWordsList: function(packName) {
-			return $http.get(apiUrl + '/' + packName + '/terms').then(function(response) {
-				return response.data;
-			});
+		getNewPacksList: function(language) {
+			return getElem('newPacksList', language, newPacksList);
 		},
 
-		getUntouchedList: function() {
-			return untouchedList;
+		getUntouchedList: function(language) {
+			return getElem('untouchedList', language);
 		},
 
-		getOldPacksList: function() {
-			return untouchedList;
+		getOldPacksList: function(language) {
+			return getElem('oldPacksList', language);
 		},
 
-		getNewList: function() {
-			return newList;
+		getNewList: function(language) {
+			return getElem('newList', language);
 		},
 
-		getActiveList: function() {
-			return activeList;
+		getActiveList: function(language) {
+			return getElem('activeList', language);
 		},
 
-		getCompletedList: function() {
-			return completedList;
-		},
-
-		disableCompleted: function() {
-			if(completedList.length == 0) {
-				return true;
-			} else {
-				return false;
-			}
+		getCompletedList: function(language) {
+			return getElem('completedList', language);
 		},
 
 		removeUntouched: function(itemId) {
@@ -497,7 +507,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    			untouchedList.splice(i, 1);
 	    		}
 	    	}
-	    	updateElemInTable('untouchedList', selectedLanguage, untouchedList);
+	    	//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
 	    	//saveUntouchedList();
 	    	return;
 		},
@@ -508,7 +518,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    			activeList.splice(i, 1);
 	    		}
 	    	}
-	    	updateElemInTable('activeList', selectedLanguage, activeList);
+	    	//updateElemInTable('activeList', selectedLanguage, activeList);
 	    	//saveActiveList();
 	    	return;			
 		},
@@ -524,8 +534,8 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 					untouchedList.splice(i, 1);
 				}
 			}
-			updateElemInTable('activeList', selectedLanguage, activeList);
-			updateElemInTable('untouchedList', selectedLanguage, untouchedList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
+			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
 			//saveActiveList();
 			//saveUntouchedList();
 			return;			
@@ -544,9 +554,9 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 					untouchedList.push(new Category(newList[i].name, '[]', newList[i].translations, newList[i].language, newList[i].id));
 				}
 			}
-			updateElemInTable('activeList', selectedLanguage, activeList);
-			updateElemInTable('untouchedList', selectedLanguage, untouchedList);
-			updateElemInTable('oldPacksList', selectedLanguage, newPacksList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
+			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
+			//updateElemInTable('oldPacksList', selectedLanguage, newPacksList);
 			//saveActiveList();
 			//saveUntouchedList();
 			//saveOldPacksList();
@@ -564,84 +574,90 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 				}
 			}
 			untouchedList = untouchedTemp;
-			updateElemInTable('activeList', selectedLanguage, activeList);
-			updateElemInTable('untouchedList', selectedLanguage, untouchedList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
+			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
 			//saveActiveList();
 			//saveUntouchedList();
 			return;
 		},
 
-		saveOldPacksList: function() {
-			oldPacksList = newPacksList;
-			updateElemInTable('oldPacksList', selectedLanguage, newPacksList);
+		addToOldPacksList: function(language, oldPacksList) {
+			return updateElem('oldPacksList', language, oldPacksList);
+			//updateElemInTable('oldPacksList', selectedLanguage, newPacksList);
 			//saveOldPacksList();
-			return;
+			
 		},
 
 		addToActiveWithWordsList: function(name, wordsList, translations, language, id) {
 			activeList.push(new Category(name, wordsList, translations, language, id));
-			updateElemInTable('activeList', selectedLanguage, activeList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
 			//saveActiveList();
 			return;
 		},
 
-		addToActive: function(name, wordsList, translations, language, id) {
-			activeList.push(new Category(name, wordsList, translations, language, id));
-			updateElemInTable('activeList', selectedLanguage, activeList);
-			//saveActiveList();
-			return;			
+		addToActive: function(language, activeList) {
+			return updateElem('activeList', language, activeList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
+			//saveActiveList();	
 		},
 
-		addToUntouched: function(name, wordsList, translations, language, id) {
-			untouchedList.push(new Category(name, wordsList, translations, language, id));
-			updateElemInTable('untouchedList', selectedLanguage, untouchedList);
+		addToUntouched: function(language, untouchedList) {
+			return updateElem('untouchedList', language, untouchedList);
+			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
 			//saveUntouchedList();
-			return;
+		},
+
+		addToListTemp: function(child) {
+			var category = new Category2(child.cawl_H_ID, child.has_parrent, child.name, child.wordsList, child.translations, child.language, child.id);
+			return category;
 		},
 
 		addToComplete: function(name, language, id) {
 			completedList.push(new Category(name, [], [], language, id));
-			updateElemInTable('completedList', selectedLanguage, completedList);
+			//updateElemInTable('completedList', selectedLanguage, completedList);
 			//saveCompletedList();
 			return;
 		},
 
-		updateNewList2: function(newPacksListReceived) {
+		updateNewList: function(oldPacksListReceived, newPacksListReceived, language) {
 			newPacksList = newPacksListReceived;
-			updateElemInTable('newPacksList', selectedLanguage, newPacksList);
+			updateElem('newPacksList', language, newPacksList);
 			//saveNewPacksList();
 			var tempNew = [];
-			var tempOld = oldPacksList;
 
-			for (var i = 0; i < newPacksList.length; i++) {
-				var notActive = true;
-				for (var j = 0; j < tempOld.length; j++) {
-					if (newPacksList[i].id == tempOld[j].id) {
-						notActive = (notActive && false);
-					} else {
-						notActive = (notActive && true);
+				var tempOld = oldPacksListReceived;
+
+				for (var i = 0; i < newPacksList.length; i++) {
+					var notActive = true;
+					for (var j = 0; j < tempOld.length; j++) {
+						if (newPacksList[i].id == tempOld[j].id) {
+							notActive = (notActive && false);
+						} else {
+							notActive = (notActive && true);
+						}
+					}
+					if(notActive) {			
+						tempNew.push(new Category2(newPacksList[i].p.cawl_H_ID, false, newPacksList[i].p.name, newPacksList[i].wordlist, [], newPacksList[i].p.language, newPacksList[i].p.id));
+						//tempNew.push(new Category(newPacksList[i].name, [], [], newPacksList[i].language, newPacksList[i].id));
 					}
 				}
-				if(notActive) {					
-					tempNew.push(new Category(newPacksList[i].p.name, newPacksList[i].wordlist, [], newPacksList[i].p.language, newPacksList[i].p.id));
-				}
-			}
 
-			for(var i = 0; i < tempNew.length; i++) {
-				var packTemp = tempNew[i];
-		    	for(var j = 0; j < packTemp.wordsList.length; j++) {
-		    		packTemp.translations.push(new Translation(packTemp.wordsList[j].id, 'français', ''));
-		    	}
-		    	tempNew[i] = packTemp;
-		    }
+				for(var i = 0; i < tempNew.length; i++) {
+					var packTemp = tempNew[i];
+			    	for(var j = 0; j < packTemp.wordsList.length; j++) {
+			    		packTemp.translations.push(new Translation(packTemp.wordsList[j].id, 'français', ''));
+			    	}
+			    	tempNew[i] = packTemp;
+			    }
 
-			newList = tempNew;
-			updateElemInTable('newList', selectedLanguage, newList);
-			//saveNewList();
-			return newList;
+				console.log(tempNew);
+			    updateElem('newList', language, tempNew);
+			    
+			    return tempNew;
+				//saveNewList();
 		},
 
-		updateNewList: function(newPacksListReceived) {
+		/*updateNewList2: function(newPacksListReceived) {
 			newPacksList = newPacksListReceived;
 			updateElemInTable('newPacksList', selectedLanguage, newPacksList);
 			//saveNewPacksList();
@@ -666,7 +682,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			updateElemInTable('newList', selectedLanguage, newList);
 			//saveNewList();
 			return newList;
-		},
+		},*/
 
 		//******************** TEST INTEGRATION LISTSTORE **********************************
 
@@ -700,11 +716,11 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 					activeList[i].wordsList = wordsListTemp;
 				}
 			}
-			updateElemInTable('activeList', selectedLanguage, activeList);
+			//updateElemInTable('activeList', selectedLanguage, activeList);
 			//saveActiveList();
 
 			countOfWordsTranslated = countOfWordsTranslated + translationsToSend.length;
-			updateElemInTable('countOfWordsTranslated', selectedLanguage, countOfWordsTranslated);
+			//updateElemInTable('countOfWordsTranslated', selectedLanguage, countOfWordsTranslated);
 			//saveCount();
 
 		    $http.post(apiUrl + "/translate/json", {translations: translationsToSend}).then(function(response) {
@@ -778,7 +794,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    			return;
 	    		}
 	    	}
-	    	updateElemInTable('activeList', selectedLanguage, activeList);
+	    	//updateElemInTable('activeList', selectedLanguage, activeList);
 	    	//saveActiveList();
 	    },
 
@@ -789,7 +805,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    			activeList[i].translations.splice(index, 1);
 	    		}
 	    	}
-	    	updateElemInTable('activeList', selectedLanguage, activeList);
+	    	//updateElemInTable('activeList', selectedLanguage, activeList);
 	    	//saveActiveList();
 	    	addToComplete(pack);
 	    },
@@ -806,12 +822,12 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    		if(activeList[i].id == packId) {
 	    			untouchedList.push(new Category(activeList[i].name, activeList[i].wordsList, activeList[i].translations, activeList[i].language, activeList[i].id));
 	    			activeList.splice(i, 1);
-	    			updateElemInTable('activeList', selectedLanguage, activeList);
+	    			//updateElemInTable('activeList', selectedLanguage, activeList);
 	    			//saveActiveList();
 	    			return;
 	    		}
 	    	}
-	    	updateElemInTable('untouchedList', selectedLanguage, untouchedList);
+	    	//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
 	    	//saveUntouchedList();
 	    }
 

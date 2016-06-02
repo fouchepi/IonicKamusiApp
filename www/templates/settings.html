@@ -6,10 +6,10 @@
 
 	<ion-content>
 
-		<div class="card" ng-if="firstTime"><h4 class="text-center"> Please add a language</h4></div>
+		<div class="card" ng-if="firstTime"><h4 class="text-center"> Please add a destination language</h4></div>
 
 		<ion-list type="list-inset">
-			<ion-radio ng-repeat="item in languages" ng-value="item.name" ng-model="data.name" ng-change="changeLanguage(item)">{{item.name}}</ion-radio>
+			<ion-radio ng-repeat="item in languages" ng-value="item.language" ng-model="currentLanguage" ng-change="changeLanguage(item)">{{item.language}}</ion-radio>
 		</ion-list>
 
 		<div class="padding">
@@ -17,6 +17,8 @@
 				  Add Language
 			</button>
 		</div>
+
+    <!--<div class="card" ng-if="firstTime"><h4 class="text-center"> Please select a source language</h4></div>-->
 
    <script id="templates/modal.html" type="text/ng-template">
    		<!-- style="width: 90%; height: 70%; min-height: 0; top: 10%; left: 5%; right: 5%; bottom: 20%;" -->

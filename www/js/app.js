@@ -5,7 +5,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-var app = angular.module('kamusiapp', ['ionic', 'kamusiapp.liststore', 'kamusiapp.homestore', 'jett.ionic.filter.bar'])
+var app = angular.module('kamusiapp', ['ionic', 'kamusiapp.liststore', 'kamusiapp.homestore', 'kamusiapp.localdb', 'jett.ionic.filter.bar'])
 
 app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
 
@@ -129,18 +129,17 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
  //$scope.show();
 
     $scope.$on('$ionicView.enter', function(e) {
-        HomeStore.initLanguage(function(temp){
-          if(temp) {
-            $state.go('app.settings');
-          } else {
-
-            HomeStore.getCurrentLanguageTest(function(language) {
-              HomeStore.getAllElemForLanguage(language).then(function(responses) {
-                console.log(responses);
-                $scope.update();
-              });
+        HomeStore.getLanguages().then(function(languages){
+          if(languages.length == 0) {
+            HomeStore.initCurrentLanguages().then(function() {
+              $state.go('app.settings');
             });
-
+          } else {
+            $scope.showLoading();
+            HomeStore.getCurrentLanguage().then(function(language) {
+              $scope.currentLanguage = language;
+              $scope.update(language);
+            });
           }
         });
     })
@@ -154,36 +153,46 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     });
   };
 
-  $scope.show = function() {
+  $scope.showLoading = function() {
     $ionicLoading.show({
       template: '<ion-spinner icon="lines"></ion-spinner>'
     });
   };
 
-  $scope.hide = function(){
+  $scope.hideLoading = function(){
     $ionicLoading.hide();
   };
 
-  $scope.update = function() {
+  $scope.update = function(language) {
 
-    console.log('in update');
-
-   
 
     HomeStore.getNewPacksListAndWordsList().then(function(newPacksListReceived) {
-      $scope.newList = HomeStore.updateNewList2(newPacksListReceived);
-      $scope.hide();
+      HomeStore.getOldPacksList(language).then(function(oldPacksList) {
+        var newList = HomeStore.updateNewList(oldPacksList, newPacksListReceived, language);
+        $scope.newList = newList;
+        //var pid = hid.slice(0,hid.lastIndexOf('.'));
+      });        
+      $scope.hideLoading();
     }).catch(function(err) {
       console.error(err);
       $scope.showAlert();
-      $scope.hide();
-      $scope.newList = HomeStore.getNewList(); 
+      HomeStore.getNewList(language).then(function(newList) {
+        $scope.newList = newList;
+      });      
+      $scope.hideLoading();
     });  
 
-    $scope.untouchedList = HomeStore.getUntouchedList(); 
-    $scope.activeList = HomeStore.getActiveList();
+    HomeStore.getUntouchedList(language).then(function(untouchedList) {
+      $scope.untouchedList = untouchedList;
+    });
 
-    $scope.disableCompleted = HomeStore.disableCompleted();
+    HomeStore.getActiveList(language).then(function(activeList) {
+      $scope.activeList = activeList;
+    });
+
+    HomeStore.getCompletedList(language).then(function(completedList) {
+      $scope.completedList = completedList;
+    });
   }
 
 
@@ -206,12 +215,17 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
 }]);
 
 app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($http, $state, $scope, HomeStore) {
-
-  $scope.packsList = HomeStore.getNewList();
-  
+   
   $scope.refresh = function() {
-    $scope.packsList = HomeStore.updateNewList();
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.getNewList(currentLanguage).then(function(newList) {
+        $scope.packsList = newList;
+        console.log($scope.packsList);
+      });      
+    })
   }
+
+  $scope.refresh();
 
   $scope.save = function() {
 
@@ -224,17 +238,25 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
         HomeStore.addToUntouched(child.name, '[]', child.translations, child.language, child.id);
       }
     });*/
-
+    var activeList = [];
+    var untouchedList = [];
     angular.forEach($scope.packsList, function(child) {
       if(child.checked) {
-        HomeStore.addToActive(child.name, child.wordsList, child.translations, child.language, child.id);
+        activeList.push(HomeStore.addToListTemp(child));  
       } else {
-        HomeStore.addToUntouched(child.name, child.wordsList, child.translations, child.language, child.id);
+        untouchedList.push(HomeStore.addToListTemp(child));
       }
     });
 
-    HomeStore.saveOldPacksList();
-    $state.go('app.mainList');
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.getNewPacksList(currentLanguage).then(function(newPacksList) {
+        HomeStore.addToOldPacksList(currentLanguage, newPacksList);
+      })
+      HomeStore.addToUntouched(currentLanguage, untouchedList);
+      HomeStore.addToActive(currentLanguage, activeList).then(function() {
+        $state.go('app.mainList');
+      });
+    });
   };
 
 }]);
@@ -420,29 +442,45 @@ $scope.$on('$destroy', function() {
 app.controller('SettingsCtrl', ['$scope', '$ionicModal', '$ionicFilterBar', 'HomeStore', '$state', function($scope, $ionicModal, $ionicFilterBar, HomeStore, $state) {
 
   var filterBarInstance;
+  $scope.firstTime = false;
 
   HomeStore.getLanguagesSearch(function(list) {
     $scope.list = list;
-  });
+  })
 
-  $scope.languages = HomeStore.getLanguagesSelect();
+  HomeStore.getLanguages().then(function(languages) {
+    $scope.languages = languages;
 
-  $scope.currentLanguage = HomeStore.getCurrentLanguage();
+    if($scope.languages.length == 0) {
+      $scope.firstTime = true;
+    } else if($scope.languages.length == 1) {
+      HomeStore.changeLanguage($scope.languages[0]);
+      $scope.currentLanguage = $scope.languages[0].language
+    }
 
-  $scope.onClick = function(item) {
-    HomeStore.addToLanguages(item);
+    HomeStore.getCurrentLanguage().then(function(language) {
+      $scope.currentLanguage = language;
+    })
+
+  })
+    
+
+  $scope.onClick = function(item) {  
+    var alreadyIn = false;
+    for(var i = 0; i < $scope.languages.length; i++) {
+      if($scope.languages[i].language == item.name) {
+        alreadyIn = true;
+      }
+    }
+
+    if(!alreadyIn) {
+      HomeStore.addToLanguages(item);
+    }
+    
     $state.go($state.current, {}, {reload: true});
     $scope.closeModal();
     filterBarInstance(); 
   }; 
-
-  if($scope.languages.length == 0) {
-    $scope.firstTime = true;
-  }
-
-  if($scope.languages.length == 1) {
-    HomeStore.changeLanguage($scope.languages[0]);
-  }
 
   $scope.test = true;
 
