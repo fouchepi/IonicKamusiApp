@@ -22,17 +22,17 @@
 
 			<button class="button button-block button-dark" ng-click="new()" ng-disabled="newList.length == 0">
 			  New 
-			  <span class="badge badge-assertive">{{newList.length}}</span>
+			  <span class="badge badge-assertive">{{newListLength}}</span>
 			</button>
 
 			<button class="button button-block button-dark" ng-click="active()" ng-disabled="activeList.length == 0">
 			  Active
-			  <span class="badge badge-balanced">{{activeList.length}}</span>	  
+			  <span class="badge badge-balanced">{{activeListLength}}</span>	  
 			</button>
 
 			<button class="button button-block button-dark" ng-click="untouched()" ng-disabled="untouchedList.length == 0">
 			  Untouched
-			  <span class="badge badge-energized">{{untouchedList.length}}</span>
+			  <span class="badge badge-energized">{{untouchedListLength}}</span>
 			</button>
 
 			<button class="button button-block button-dark" ng-click="completed()" ng-disabled="completedList.length == 0">

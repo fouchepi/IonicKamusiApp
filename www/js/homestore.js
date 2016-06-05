@@ -45,9 +45,9 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    this.id = id;
 	  }
 
-	  function Category2(cawl_H_ID, has_parent, name, wordsList, translations, language, id) {
+	  function Category2(cawl_H_ID, has_parrent, name, wordsList, translations, language, id) {
 	  	this.cawl_H_ID = cawl_H_ID;
-	  	this.has_parent = has_parent;
+	  	this.has_parrent = has_parrent;
 	    this.name = name;
 	    this.wordsList = wordsList;
 	    this.translations = translations;
@@ -607,10 +607,10 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			//saveUntouchedList();
 		},
 
-		addToListTemp: function(child) {
+		/*addToListTemp: function(child) {
 			var category = new Category2(child.cawl_H_ID, child.has_parrent, child.name, child.wordsList, child.translations, child.language, child.id);
 			return category;
-		},
+		},*/
 
 		addToComplete: function(name, language, id) {
 			completedList.push(new Category(name, [], [], language, id));
@@ -637,7 +637,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 						}
 					}
 					if(notActive) {			
-						tempNew.push(new Category2(newPacksList[i].p.cawl_H_ID, false, newPacksList[i].p.name, newPacksList[i].wordlist, [], newPacksList[i].p.language, newPacksList[i].p.id));
+						tempNew.push(new Category2(newPacksList[i].p.cawl_H_ID, newPacksList[i].p.has_parrent, newPacksList[i].p.name, newPacksList[i].wordlist, [], newPacksList[i].p.language, newPacksList[i].p.id));
 						//tempNew.push(new Category(newPacksList[i].name, [], [], newPacksList[i].language, newPacksList[i].id));
 					}
 				}
@@ -650,7 +650,6 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			    	tempNew[i] = packTemp;
 			    }
 
-				console.log(tempNew);
 			    updateElem('newList', language, tempNew);
 			    
 			    return tempNew;

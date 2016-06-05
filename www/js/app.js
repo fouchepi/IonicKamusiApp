@@ -170,7 +170,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
       HomeStore.getOldPacksList(language).then(function(oldPacksList) {
         var newList = HomeStore.updateNewList(oldPacksList, newPacksListReceived, language);
         $scope.newList = newList;
-        //var pid = hid.slice(0,hid.lastIndexOf('.'));
+        $scope.newListLength = length($scope.newList);
       });        
       $scope.hideLoading();
     }).catch(function(err) {
@@ -178,21 +178,34 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
       $scope.showAlert();
       HomeStore.getNewList(language).then(function(newList) {
         $scope.newList = newList;
+        $scope.newListLength = length($scope.newList);
       });      
       $scope.hideLoading();
     });  
 
     HomeStore.getUntouchedList(language).then(function(untouchedList) {
       $scope.untouchedList = untouchedList;
+      $scope.untouchedListLength = length($scope.untouchedList);
     });
 
     HomeStore.getActiveList(language).then(function(activeList) {
       $scope.activeList = activeList;
+      $scope.activeListLength = length($scope.activeList);
     });
 
     HomeStore.getCompletedList(language).then(function(completedList) {
       $scope.completedList = completedList;
     });
+  }
+
+  function length(list) {
+    var count = 0;
+    angular.forEach(list, function(child) {
+      if(!child.has_parrent) {
+        count++;
+      }
+    });
+    return count;
   }
 
 
@@ -220,7 +233,6 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.getNewList(currentLanguage).then(function(newList) {
         $scope.packsList = newList;
-        console.log($scope.packsList);
       });      
     })
   }
@@ -242,11 +254,37 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
     var untouchedList = [];
     angular.forEach($scope.packsList, function(child) {
       if(child.checked) {
-        activeList.push(HomeStore.addToListTemp(child));  
+        activeList.push(child);
       } else {
-        untouchedList.push(HomeStore.addToListTemp(child));
+        if(!child.has_parrent) {
+          untouchedList.push(child);
+        }
       }
     });
+
+    //var pid = hid.slice(0,hid.lastIndexOf('.'));
+
+    function fillList(packsList, list) {
+      var listTemp = [];
+      angular.forEach(list, function(listChild) {
+        var temp = 0;
+        var indexTemp = 0;
+        listTemp.push(listChild);
+        angular.forEach(packsList, function(packsListChild) {
+          temp = packsListChild.cawl_H_ID.indexOf('.');
+          if(temp != -1) {
+            indexTemp = packsListChild.cawl_H_ID.slice(0, temp);
+            if(listChild.cawl_H_ID == indexTemp) {
+              listTemp.push(packsListChild);
+            }
+          }
+        })
+      })
+      return listTemp;
+    }
+
+    activeList = fillList($scope.packsList, activeList);
+    untouchedList = fillList($scope.packsList, untouchedList);
 
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.getNewPacksList(currentLanguage).then(function(newPacksList) {
@@ -293,10 +331,6 @@ app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', fun
 
   $scope.remove = function(categoryId) {
     HomeStore.removePack(categoryId);
-  };
-
-  $scope.data = {
-    showDelete: false
   };
 
 }]);

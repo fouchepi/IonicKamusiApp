@@ -26,7 +26,7 @@
 	<ion-content>
 		<ion-list type="list-inset">
 			<ion-checkbox class="item-checkbox-right checkbox-dark" ng-model="pack.checked" 
-			ng-checked="" ng-repeat="pack in packsList track by pack.id">
+			ng-checked="" ng-repeat="pack in packsList track by pack.id" ng-if="!pack.has_parrent">
 				<h2>{{pack.name}}</h2>
 			</ion-checkbox>
 		</ion-list>
