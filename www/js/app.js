@@ -52,6 +52,17 @@ app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
     } 
   });
 
+  $stateProvider.state('app.sideList', {
+    url: '/sideList/:cawlId',
+    cache: false,
+    views: {
+      'menuContent':{
+        templateUrl: 'templates/sideList.html',
+        controller: 'SideListCtrl'
+      }
+    } 
+  });
+
   $stateProvider.state('app.untouched', {
     url: '/untouched',
     cache: false, 
@@ -125,8 +136,6 @@ app.controller('AppCtrl', ['$scope', 'HomeStore', function($scope, HomeStore) {
 }]);
 
 app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPopup', '$ionicLoading', function($scope, HomeStore, $state, $http, $ionicPopup, $ionicLoading) {
- 
- //$scope.show();
 
     $scope.$on('$ionicView.enter', function(e) {
         HomeStore.getLanguages().then(function(languages){
@@ -137,8 +146,11 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
           } else {
             $scope.showLoading();
             HomeStore.getCurrentLanguage().then(function(language) {
-              $scope.currentLanguage = language;
-              $scope.update(language);
+              HomeStore.getCodeCurrentLanguage().then(function(code) {
+                $scope.codeCurrentLanguage = code;
+                $scope.currentLanguage = language;
+                $scope.update(language, code);                
+              });
             });
           }
         });
@@ -163,12 +175,12 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     $ionicLoading.hide();
   };
 
-  $scope.update = function(language) {
+  $scope.update = function(language, code) {
 
 
     HomeStore.getNewPacksListAndWordsList().then(function(newPacksListReceived) {
       HomeStore.getOldPacksList(language).then(function(oldPacksList) {
-        var newList = HomeStore.updateNewList(oldPacksList, newPacksListReceived, language);
+        var newList = HomeStore.updateNewList(oldPacksList, newPacksListReceived, language, code);
         $scope.newList = newList;
         $scope.newListLength = length($scope.newList);
       });        
@@ -241,15 +253,6 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
 
   $scope.save = function() {
 
-    /*angular.forEach($scope.packsList, function(child) {
-      if(child.checked) {
-        HomeStore.getWordsList(child.name).then(function(wordsList) {
-          HomeStore.addToActiveWithWordsList(child.name, wordsList, child.translations, child.language, child.id);
-        });
-      } else {
-        HomeStore.addToUntouched(child.name, '[]', child.translations, child.language, child.id);
-      }
-    });*/
     var activeList = [];
     var untouchedList = [];
     angular.forEach($scope.packsList, function(child) {
@@ -261,8 +264,6 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
         }
       }
     });
-
-    //var pid = hid.slice(0,hid.lastIndexOf('.'));
 
     function fillList(packsList, list) {
       var listTemp = [];
@@ -300,20 +301,67 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
 }]);
 
 app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scope, $state, HomeStore) {
-  $scope.untouchedList = HomeStore.getUntouchedList();
 
-  $scope.goToWordsListFromUntouched = function(untouchedId) {
-    HomeStore.goToWordsListFromUntouched(untouchedId);
-    $state.go('app.wordsList', {categoryId: untouchedId})
+  var activeList = [];
+  HomeStore.getCurrentLanguage().then(function(currentLanguage)  {
+    HomeStore.getUntouchedList(currentLanguage).then(function(untouchedList) {
+      $scope.untouchedList = untouchedList;
+    HomeStore.getActiveList(currentLanguage).then(function(activeListR) {
+      activeList = activeListR;
+    });
+    })
+  })
+
+  $scope.goToWordsListFromUntouched = function(cawl_H_ID) {
+    var untouchedListTemp = [];
+    var activeListTemp = activeList;
+
+    angular.forEach($scope.untouchedList, function(child, index) {
+      var temp = child.cawl_H_ID.indexOf('.');
+      if(temp != -1) {
+        var indexTemp = child.cawl_H_ID.slice(0, temp);
+        if(indexTemp == cawl_H_ID) {
+          activeListTemp.push(child);
+        } else {
+          untouchedListTemp.push(child);
+        }
+      } else if(child.cawl_H_ID == cawl_H_ID) {
+        activeListTemp.push(child);
+      } else {
+        untouchedListTemp.push(child);
+      }
+    });
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToUntouched(currentLanguage, untouchedListTemp);
+      $scope.untouchedList = untouchedListTemp;
+      HomeStore.addToActive(currentLanguage, activeListTemp); 
+      $state.go('app.sideList', {cawlId: cawl_H_ID});           
+    });
   };
 
-  $scope.save = function() {
-    HomeStore.saveUdpateUntouched();
-    $state.go('app.mainList');
-  };
+  $scope.remove = function(cawl_H_ID) {
+    var untouchedListTemp = [];
 
-  $scope.remove = function(itemId) {
-    HomeStore.removeUntouched(itemId);
+    angular.forEach($scope.untouchedList, function(child) {
+      var temp = child.cawl_H_ID.indexOf('.');
+      if(temp != -1) {
+        var indexTemp = child.cawl_H_ID.slice(0, temp);
+        if(indexTemp != cawl_H_ID) {
+          untouchedListTemp.push(child);
+        }
+      } else if(child.cawl_H_ID != cawl_H_ID) {
+        untouchedListTemp.push(child);
+      }
+    })
+
+    console.log(untouchedListTemp);
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToUntouched(currentLanguage, untouchedListTemp);
+      $scope.untouchedList = untouchedListTemp;
+    });
+
   };
 
   $scope.data = {
@@ -327,16 +375,143 @@ app.controller('CompletedCtrl', ['$scope', 'HomeStore', function($scope, HomeSto
 }]);
 
 app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', function($http, $scope, ListStore, HomeStore) {
-  $scope.mainList = HomeStore.getActiveList();
 
-  $scope.remove = function(categoryId) {
-    HomeStore.removePack(categoryId);
+  var untouchedList = [];
+  HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+    HomeStore.getActiveList(currentLanguage).then(function(activeList) {
+      $scope.mainList = activeList;
+    });
+    HomeStore.getUntouchedList(currentLanguage).then(function(untouchedListR) {
+      untouchedList = untouchedListR;
+    }); 
+  })
+
+  $scope.remove = function(cawl_H_ID) {
+    var activeListTemp = [];
+    var untouchedListTemp = untouchedList;
+
+    angular.forEach($scope.mainList, function(child, index) {
+      var temp = child.cawl_H_ID.indexOf('.');
+      if(temp != -1) {
+        var indexTemp = child.cawl_H_ID.slice(0, temp);
+        if(indexTemp == cawl_H_ID) {
+          untouchedListTemp.push(child);
+        } else {
+          activeListTemp.push(child);
+        }
+      } else if(child.cawl_H_ID == cawl_H_ID) {
+        untouchedListTemp.push(child);
+      } else {
+        activeListTemp.push(child);
+      }
+    });
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToActive(currentLanguage, activeListTemp);
+      $scope.mainList = activeListTemp;
+      HomeStore.addToUntouched(currentLanguage, untouchedListTemp);
+    });
+
   };
 
 }]);
 
-app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'HomeStore',  function($scope, $state, ListStore, $http, HomeStore) {
-  $scope.category = HomeStore.getPack($state.params.categoryId);
+app.controller('SideListCtrl', ['$scope', '$state', 'HomeStore', '$rootScope', '$ionicPlatform', function($scope, $state, HomeStore, $rootScope, $ionicPlatform) {
+
+  var cawlId = $state.params.cawlId;
+  var catIndex = 0;
+  var length = cawlId.length + 1;
+  var sideListTemp = [];
+
+  HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+    HomeStore.getActiveList(currentLanguage).then(function(activeList) {
+
+      angular.forEach(activeList, function(child) {
+        var cawlIdTest = cawlId + '.';
+        if((child.cawl_H_ID.lastIndexOf(cawlIdTest, 0) === 0) || child.cawl_H_ID == cawlId) {
+          var endTemp = child.cawl_H_ID.substring(length, child.cawl_H_ID.length);
+          var index = endTemp.indexOf('.');
+          if(index == -1) {
+            if(((child.cawl_H_ID == cawlId) && (child.wordsList.length != 0)) || (child.cawl_H_ID != cawlId))  {
+              catIndex = child.id;
+              sideListTemp.push(child);
+            }  
+          }
+        }
+      })
+
+      if(sideListTemp.length == 1) {
+        var categoryId = sideListTemp[0].id;
+        $state.go('app.wordsList', {categoryId: categoryId});
+      } else {
+        $scope.sideList = sideListTemp;
+      }
+    })
+  })
+
+  $scope.changeList = function(cawlIdR) {
+    if(cawlIdR != cawlId) {
+      $state.go('app.sideList', {cawlId: cawlIdR});
+    } else {
+      $state.go('app.wordsList', {categoryId: catIndex});
+    }   
+  }
+
+  // run this function when either hard or soft back button is pressed
+  var doCustomBack = function() {
+      console.log("custom BACK");
+      /*console.log(cawlId);
+      var index = cawlId.lastIndexOf('.');
+      if(index != -1) {
+        var cawlIdFinal = cawlId.slice(0, index);
+        $state.go('app.sideList', {cawlId: cawlIdFinal});        
+      } else {*/
+        $state.go('app.mainList');
+      //}
+  };
+
+  // override soft back
+  // framework calls $rootScope.$ionicGoBack when soft back button is pressed
+  var oldSoftBack = $rootScope.$ionicGoBack;
+  $rootScope.$ionicGoBack = function() {
+      doCustomBack();
+  };
+  var deregisterSoftBack = function() {
+      $rootScope.$ionicGoBack = oldSoftBack;
+  };
+
+  // override hard back
+  // registerBackButtonAction() returns a function which can be used to deregister it
+  var deregisterHardBack = $ionicPlatform.registerBackButtonAction(
+      doCustomBack, 101
+  );
+
+  // cancel custom back behaviour
+  $scope.$on('$destroy', function() {
+      deregisterHardBack();
+      deregisterSoftBack();
+  });
+
+}]);
+
+app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'HomeStore', '$rootScope', '$ionicPlatform',  function($scope, $state, ListStore, $http, HomeStore, $rootScope, $ionicPlatform) {
+
+  var categoryId = $state.params.categoryId;
+  var cawlId = '';
+  var activeListTemp = [];
+
+  HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+    HomeStore.getActiveList(currentLanguage).then(function(activeList) {
+      activeListTemp = activeList;
+      angular.forEach(activeList, function(child, index) {
+        if(child.id == categoryId) {
+          $scope.category = child;
+          cawlId = child.cawl_H_ID;
+          $scope.categoryTemp = angular.copy(child);
+        }
+      })
+    })
+  });
 
   $scope.save = function(wordId) {
     var currentWordIndex = HomeStore.getCurrentWordIndex($scope.category, wordId)
@@ -344,62 +519,147 @@ app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'Home
   };
 
   $scope.postTranslation = function() {
-    //var translations = angular.toJson($scope.category.translations);
-    //console.log($scope.category.translations);
+    var wordsListTemp = [];
+    var translationsTemp = [];
+    var translationsToSend = [];
 
-    /*var test = ListStore.getTranslation2();
+    console.log($scope.category);
 
-    var url = 'http://lsir-kamusi.epfl.ch:3000/mobile/translate/json';
-    $http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+    angular.forEach($scope.category.translations, function(child, index) {
+      console.log(child);
+      if(child.translation == '') {
+        wordsListTemp.push($scope.category.wordsList[index]);
+        translationsTemp.push(child);
+      } else {
+        translationsToSend.push(child);
+      }
+    })
 
-    $http.post(url, {translations: test}).then(function(response) {
-      console.log(response);
-    }).catch(function(err) {
-      console.error(err.data);
-    });*/
+    for(var i = 0; i <activeListTemp.length; i++) {
+      if(activeListTemp[i].id == $scope.categoryTemp.id) {
+        console.log(activeListTemp[i]);
+        activeListTemp[i].translations = translationsTemp;
+        activeListTemp[i].wordsList = wordsListTemp;
+      }      
+    }
 
-    HomeStore.postTranslation($scope.category);
-    $state.go('app.home');
+    console.log(wordsListTemp);      
+    console.log(translationsTemp);      
+    console.log(translationsToSend);
+    console.log(activeListTemp);
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToActive(currentLanguage, activeListTemp);
+      HomeStore.getCountOfWordsTranslated(currentLanguage).then(function(count) {
+        var newCount = count + translationsToSend.length;
+        HomeStore.addToCount(currentLanguage, newCount);
+      })
+    })
+
+    HomeStore.postTranslation2(translationsToSend);
+    //$state.go('app.home');
     
   };
+
+   // run this function when either hard or soft back button is pressed
+  var doCustomBack = function() {
+      console.log("custom BACK");
+      /*console.log(cawlId);
+      var index = cawlId.lastIndexOf('.');
+      if(index != -1) {
+        var cawlIdFinal = cawlId.slice(0, index);
+        $state.go('app.sideList', {cawlId: cawlIdFinal});        
+      } else {*/
+        $state.go('app.mainList');
+      //}
+  };
+
+  // override soft back
+  // framework calls $rootScope.$ionicGoBack when soft back button is pressed
+  var oldSoftBack = $rootScope.$ionicGoBack;
+  $rootScope.$ionicGoBack = function() {
+      doCustomBack();
+  };
+  var deregisterSoftBack = function() {
+      $rootScope.$ionicGoBack = oldSoftBack;
+  };
+
+  // override hard back
+  // registerBackButtonAction() returns a function which can be used to deregister it
+  var deregisterHardBack = $ionicPlatform.registerBackButtonAction(
+      doCustomBack, 101
+  );
+
+  // cancel custom back behaviour
+  $scope.$on('$destroy', function() {
+      deregisterHardBack();
+      deregisterSoftBack();
+  });
+
 }]);
 
-app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory', 'HomeStore', '$ionicPopup', '$rootScope', '$ionicPlatform', function($scope, $state, ListStore, $ionicHistory, HomeStore, $ionicPopup, $rootScope, $ionicPlatform) {
+app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore', '$ionicPopup', '$rootScope', '$ionicPlatform', function($scope, $state, $ionicHistory, HomeStore, $ionicPopup, $rootScope, $ionicPlatform) {
 
-  $scope.category = HomeStore.getPack($state.params.categoryId);
+  var categoryId = $state.params.categoryId;
+  var activeListTemp = [];
+  var nextWordIndex = 0;
+
+  HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+    HomeStore.getActiveList(currentLanguage).then(function(activeList) {
+      activeListTemp = activeList
+      angular.forEach(activeList, function(child) {
+        if(child.id == categoryId) {
+          $scope.category = child;
+          console.log($scope.category);
+          $scope.word = HomeStore.getWordToTrans($scope.category, $state.params.wordId);
+          $scope.currentWordIndex = HomeStore.getCurrentWordIndex($scope.category, $scope.word.id);
+          $scope.currentWordNumber = parseInt($scope.currentWordIndex) + 1 + '';
+
+          nextWordIndex = parseInt($scope.currentWordIndex) + 1 + ''; 
+
+          $scope.catTest = angular.copy(child);
+
+        }
+      })
+    })
+  });
+
+  /*$scope.category = HomeStore.getPack($state.params.categoryId);
   var categoryId = $scope.category.id;
-
   $scope.word = HomeStore.getWordToTrans($scope.category, $state.params.wordId);
   $scope.currentWordIndex = HomeStore.getCurrentWordIndex($scope.category, $scope.word.id);
   $scope.currentWordNumber = parseInt($scope.currentWordIndex) + 1 + '';
 
   var nextWordIndex = parseInt($scope.currentWordIndex) + 1 + ''; 
 
-  $scope.catTest = angular.copy(HomeStore.getPack($state.params.categoryId));
+  $scope.catTest = angular.copy(HomeStore.getPack($state.params.categoryId));*/
 
-  //$scope.translation = angular.copy(ListStore.getTranslation($scope.category, $scope.word.id));
 
   $scope.translate = function() {
 
-    /*console.log($scope.translation);
-    ListStore.addToTranslationList($scope.category, $scope.word.id, $scope.translation);
-    console.log($scope.category);*/
-
-    HomeStore.updatePack($scope.catTest);
-
-    if (nextWordIndex < $scope.category.wordsList.length) {
-      var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
-      $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
-    } else {
-      $state.go('app.wordsList', {categoryId: categoryId});
+    for(var i = 0; i<activeListTemp.length; i++) {
+      if(activeListTemp[i].id == $scope.catTest.id) {
+        activeListTemp[i] = $scope.catTest;
+      }
     }
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToActive(currentLanguage, activeListTemp).then(function() {
+
+        if (nextWordIndex < $scope.category.wordsList.length) {
+          var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
+          $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
+        } else {
+          $state.go('app.wordsList', {categoryId: categoryId});
+        }
+
+      })
+    })
  };
 
   $scope.later = function() {
 
-    //ListStore.later($scope.category.id, $scope.word);
-
-    if ($scope.word.id != $scope.category.wordsList.length) {
+    if (nextWordIndex < $scope.category.wordsList.length) {
       var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
       $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
     } else {
@@ -410,13 +670,27 @@ app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory
   $scope.skip = function() {
     var currentWordIndexTemp = $scope.currentWordIndex;
     console.log($scope.category.wordsList[currentWordIndexTemp].term);
-    if ($scope.word.id != $scope.category.wordsList.length && nextWordIndex < $scope.category.wordsList.length) {
-      var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
-      $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
-    } else {
-      $state.go('app.home');
+
+    for(var i = 0; i<activeListTemp.length; i++){
+      if(activeListTemp[i].id == $scope.category.id) {
+        activeListTemp[i].wordsList.splice(currentWordIndexTemp, 1);
+        activeListTemp[i].translations.splice(currentWordIndexTemp, 1);
+      }
     }
-    HomeStore.skipWordsList($scope.category, currentWordIndexTemp);
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToActive(currentLanguage, activeListTemp).then(function() {
+
+        if ($scope.word.id != $scope.category.wordsList.length && nextWordIndex < $scope.category.wordsList.length) {
+          var nextWordId = HomeStore.nextWordId($scope.category, currentWordIndexTemp);
+          $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
+        } else {
+          $state.go('app.home');
+        }
+        HomeStore.skipWordsList($scope.category);
+      })
+    })
+    
   };
 
   $scope.onSwipeRight = function() {
@@ -429,8 +703,8 @@ app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory
 
  $scope.showConfirm = function() {
    var confirmPopup = $ionicPopup.confirm({
-     title: 'Save Translation',
-     template: 'Are you sure you want to save the translation you start to write?'
+     title: 'Save',
+     template: '<p align="center">' + $scope.catTest.translations[$scope.currentWordIndex].translation + '</p>'
    });
 
    confirmPopup.then(function(res) {
@@ -443,33 +717,33 @@ app.controller('WordTransCtrl', ['$scope', '$state', 'ListStore', '$ionicHistory
    });
  };
 
- // run this function when either hard or soft back button is pressed
-var doCustomBack = function() {
-    console.log("custom BACK");
-    $state.go('app.wordsList', {categoryId: categoryId});
-};
+   // run this function when either hard or soft back button is pressed
+  var doCustomBack = function() {
+      console.log("custom BACK");
+      $state.go('app.wordsList', {categoryId: $state.params.categoryId});
+  };
 
-// override soft back
-// framework calls $rootScope.$ionicGoBack when soft back button is pressed
-var oldSoftBack = $rootScope.$ionicGoBack;
-$rootScope.$ionicGoBack = function() {
-    doCustomBack();
-};
-var deregisterSoftBack = function() {
-    $rootScope.$ionicGoBack = oldSoftBack;
-};
+  // override soft back
+  // framework calls $rootScope.$ionicGoBack when soft back button is pressed
+  var oldSoftBack = $rootScope.$ionicGoBack;
+  $rootScope.$ionicGoBack = function() {
+      doCustomBack();
+  };
+  var deregisterSoftBack = function() {
+      $rootScope.$ionicGoBack = oldSoftBack;
+  };
 
-// override hard back
-// registerBackButtonAction() returns a function which can be used to deregister it
-var deregisterHardBack = $ionicPlatform.registerBackButtonAction(
-    doCustomBack, 101
-);
+  // override hard back
+  // registerBackButtonAction() returns a function which can be used to deregister it
+  var deregisterHardBack = $ionicPlatform.registerBackButtonAction(
+      doCustomBack, 101
+  );
 
-// cancel custom back behaviour
-$scope.$on('$destroy', function() {
-    deregisterHardBack();
-    deregisterSoftBack();
-});
+  // cancel custom back behaviour
+  $scope.$on('$destroy', function() {
+      deregisterHardBack();
+      deregisterSoftBack();
+  });
 
 }]);
 
@@ -565,8 +839,17 @@ app.controller('SettingsCtrl', ['$scope', '$ionicModal', '$ionicFilterBar', 'Hom
 }]);
 
 app.controller('InfoUserCtrl', ['$scope', 'ListStore', 'HomeStore', function($scope, ListStore, HomeStore) {
-  $scope.countTranslations = HomeStore.getCountOfWordsTranslated();
-  $scope.language = HomeStore.getLanguageUser();
+  HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+    $scope.language = currentLanguage;
+    HomeStore.getCountOfWordsTranslated(currentLanguage).then(function(count) {
+      console.log(count);
+      if(count.length == 0) {
+        $scope.countTranslations = 0;       
+      } else {
+        $scope.countTranslations = count;
+      }     
+    })
+  })
 }]);
 
 app.run(function($ionicPlatform) {

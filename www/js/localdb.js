@@ -86,7 +86,7 @@ angular.module('kamusiapp.localdb', ['ngCordova'])
 
 		getById: function(result) {
 			var output = null;
-			output = angular.copy(result.rows.item(0).language);
+			output = angular.copy(result.rows.item(0));
 			return output;
 		},
 

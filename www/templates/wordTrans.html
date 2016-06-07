@@ -1,10 +1,10 @@
-<ion-view view-title="{{category.name}} - {{currentWordNumber}}/{{category.wordsList.length}}">
-	
+<ion-view>
+	<ion-nav-title>{{category.name}} - {{currentWordNumber}}/{{category.wordsList.length}}</ion-nav-title>
 	<ion-nav-buttons side="left">
         <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
     </ion-nav-buttons>
 	
-	<ion-content>
+	<ion-content class="has-header has-footer">
 		<div class="padding card" on-swipe-right="onSwipeRight()">
 	        <div>
 	          <h4 class="text-center">{{word.term}}</h4>

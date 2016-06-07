@@ -6,12 +6,14 @@
 
 	<ion-content class="has-header">
 		<ion-list type="list-inset">
-			<ion-item href="#/app/wordsList/{{activePack.id}}" class="item-remove-animate item-icon-right" ng-repeat="activePack in mainList track by activePack.id">
+			<!--<ion-item href="#/app/wordsList/{{activePack.id}}" class="item-remove-animate item-icon-right" ng-repeat="activePack in mainList track by activePack.id" ng-if="!activePack.has_parrent">-->
+			<ion-item href="#/app/sideList/{{activePack.cawl_H_ID}}" class="item-remove-animate item-icon-right" ng-repeat="activePack in mainList track by activePack.id" ng-if="!activePack.has_parrent">
 				<h2>{{activePack.name}}</h2>
 				<div class="icon">
-					<a class="ion-compose dark" href="#/app/wordsList/{{activePack.id}}"></a>
+					<!--<a class="ion-compose dark" href="#/app/wordsList/{{activePack.id}}"></a>-->
+					<a class="ion-compose dark" href="/app/sideList/{{activePack.cawl_H_ID}}"></a>
 					&nbsp; &nbsp;
-					<a class="ion-eye-disabled dark" ng-click="remove(activePack.id)"></a>
+					<a class="ion-eye-disabled dark" ng-click="remove(activePack.cawl_H_ID)"></a>
 				</div>	
 			</ion-item>
 		</ion-list>

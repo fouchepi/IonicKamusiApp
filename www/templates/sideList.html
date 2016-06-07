@@ -1,0 +1,22 @@
+<ion-view view-title="">
+
+	<ion-nav-buttons side="left">
+        <button menu-toggle="left" class="button button-icon button-clear ion-navicon"></button>
+    </ion-nav-buttons>
+
+	<ion-content class="has-header">
+		<ion-list type="list-inset">
+			<!--<ion-item href="#/app/sideList/{{item.cawl_H_ID}}" class="item-remove-animate item-icon-right" ng-repeat="item in sideList track by item.id">-->
+				<ion-item ng-click="changeList(item.cawl_H_ID)" class="item-remove-animate item-icon-right" ng-repeat="item in sideList track by item.id">
+				<h2>{{item.name}}</h2>
+				<div class="icon">
+					<!--<a class="ion-compose dark" href="#/app/sideList/{{item.cawl_H_ID}}"></a>-->
+					<a class="ion-compose dark" ng-click="changeList(item.cawl_H_ID)"></a>
+					<!--&nbsp; &nbsp;
+					<a class="ion-eye-disabled dark" ng-click="remove(activePack.cawl_H_ID)"></a>-->
+				</div>	
+			</ion-item>
+		</ion-list>
+	</ion-content>
+
+</ion-view>

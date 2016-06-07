@@ -24,12 +24,12 @@
 		</ion-list>-->
 
 		<ion-list type="list-inset">
-			<ion-item class="item-remove-animate item-icon-right" ng-click="goToWordsListFromUntouched(untouched.id)" ng-repeat="untouched in untouchedList track by untouched.id">
+			<ion-item class="item-remove-animate item-icon-right" ng-repeat="untouched in untouchedList track by untouched.id" ng-if="!untouched.has_parrent" ng-click="goToWordsListFromUntouched(untouched.cawl_H_ID)">
 				<h2>{{untouched.name}}</h2>
 				<div class="icon">
-					<a class="ion-compose dark" ng-click="goToWordsListFromUntouched(untouched.id)"></a>
+					<a class="ion-compose dark" ng-click="goToWordsListFromUntouched(untouched.cawl_H_ID)"></a>
 					&nbsp; &nbsp;
-					<a class="ion-trash-b assertive" ng-click="remove(untouched.id)"></a>
+					<a class="ion-trash-b assertive" ng-click="remove(untouched.cawl_H_ID); $event.stopPropagation()"></a>
 				</div>
 			</ion-item>
 		</ion-list>
