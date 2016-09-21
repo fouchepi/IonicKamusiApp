@@ -1,3 +1,4 @@
+<!--The view where we can translate a word-->
 <ion-view>
 	<ion-nav-title>{{category.name}} - {{currentWordNumber}}/{{category.wordsList.length}}</ion-nav-title>
 	<ion-nav-buttons side="left">
@@ -5,9 +6,9 @@
     </ion-nav-buttons>
 	
 	<ion-content class="has-header has-footer">
-		<div class="padding card" on-swipe-right="onSwipeRight()">
+		<div class="padding card" on-swipe-right="onSwipeRight()" on-swipe-left="onSwipeLeft()">
 	        <div>
-	          <h4 class="text-center">{{word.term}}</h4>
+	          <h4 class="text-center">{{word.term}} ({{pos(word.pos)}})</h4>
 	          	<div class="padding">
 	            	<!--Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
 	            	tempor incididunt ut labore.-->

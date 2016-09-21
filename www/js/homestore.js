@@ -2,39 +2,8 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 
 	.factory('HomeStore', ['$http', '$cordovaSQLite', '$ionicPlatform', '$q',  'LocalDB', function($http, $cordovaSQLite, $ionicPlatform, $q, LocalDB) {
 
-	//window.localStorage.clear();
-
-	/*var newPacksList = angular.fromJson(window.localStorage['newPacksList'] || '[]');
-	var oldPacksList = angular.fromJson(window.localStorage['oldPacksList'] || '[]'); 
-	var newList = angular.fromJson(window.localStorage['newList'] || '[]');
-	var activeList = angular.fromJson(window.localStorage['activeList'] || '[]');	
-	var untouchedList = angular.fromJson(window.localStorage['untouchedList'] || '[]');
-	var completedList = angular.fromJson(window.localStorage['completedList'] || '[]');
-
-	function saveNewPacksList() {
-		window.localStorage['newPacksList'] = angular.toJson(newPacksList);
-	}
-
-	function saveOldPacksList() {
-		window.localStorage['oldPacksList'] = angular.toJson(newPacksList);
-	}
-
-	function saveNewList() {
-		window.localStorage['newList'] = angular.toJson(newList);
-	}
-
-	function saveActiveList() {
-		window.localStorage['activeList'] = angular.toJson(activeList);
-	}
-
-	function saveUntouchedList() {
-		window.localStorage['untouchedList'] = angular.toJson(untouchedList);
-	}
-
-	function saveCompletedList() {
-		window.localStorage['completedList'] = angular.toJson(completedList);
-	}*/
-
+	/*The url of the kamusi server, we get all the packages this server
+	There is a documentation if you go to this address: http://lsir-kamusi.epfl.ch:3000, select the mobile tab*/
 	var apiUrl = 'http://lsir-kamusi.epfl.ch:3000/mobile';
 
 	  function Category(name, wordsList, translations, language, id) {
@@ -63,26 +32,11 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 
 	  //*******************************TEST INTEGRATION LISTSTORE*************************************  
 
-	  function WordsList(language, term, id) {
-	    this.language = language;
-	    this.term = term;
-	    this.id = id;
-	  }
-
-	  function Translation(termId, dstLanguage, translation) {
-	  	this.termId = termId;
-	  	this.dstLanguage = dstLanguage;
-	  	this.translation = translation;
-	  }
-
-
 
 	function addToComplete(pack) {
 		if(pack.wordsList.length == 0) {
 
 			completedList.push(new Category(pack.name, [], [], pack.language, pack.id));
-			//updateElemInTable('completedList', selectedLanguage, completedList);
-			//saveCompletedList();
 
 			var activeListTemp = [];
 			for(var i = 0; i < activeList.length; i++) {
@@ -92,13 +46,10 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			}
 			activeList = activeListTemp;
 			console.log(activeList);
-			//updateElemInTable('activeList', selectedLanguage, activeList);
-			//saveActiveList();
 		}
 	}
 
 	//**********************Test SqlLite WebSql ***************************
-
 	/*var db = null;
 	var dbName = "kamusiLocal.db";
 
@@ -284,19 +235,9 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	            console.error(err);
 	        });
 	    });
-	}	
-		
-		var languagesSelect = [];
-  		var selectedLanguage = '';
-		
-		var newPacksList = [];
-		var oldPacksList = [];
-		var newList = [];
-		var activeList = [];
-		var untouchedList = [];
-		var completedList = [];
-		var countOfWordsTranslated = [];*/
+	}*/
 
+		//Select the current language from the local database
 		function getCurrentLanguage() {
 			var parameters = [1];
 			return LocalDB.query('SELECT language FROM currentLanguage where id = ?', parameters).then(function(result) {
@@ -306,6 +247,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			});
 		}
 
+		//select the code of the current language from the local database
 		function getCodeCurrentLanguage() {
 			var parameters = [1];
 			return LocalDB.query('SELECT code FROM currentLanguage where id = ?', parameters).then(function(result) {
@@ -315,12 +257,14 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			});
 		}
 
+		//get all the languages the user has added from the settings view
 		function getAllLanguages() {
 			return LocalDB.query('SELECT * FROM languages').then(function(result) {
 				return LocalDB.getAll(result);
 			});
 		}
 
+		//get all the different list needed from there corresponding tables
 		function getElem(name, language) {
 			var parameters = [language];
 			return LocalDB.query('SELECT elem FROM ' + name + ' where language = ?', parameters).then(function(result) {
@@ -329,6 +273,8 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 				}
 			});
 		}
+
+		//All the different function that allow to update and initialize the tables in the local database
 
 		function updateCurrentLanguage(language, code) {
 			var parameters = [language, code, 1];
@@ -355,6 +301,8 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			return LocalDB.query('INSERT INTO ' + name + ' (language, elem) VALUES(?, ?)', parameters);
 		}
 
+		//we initialize the different tables with the added languages pass in argument
+
 		function initTable(language) {
 			insertElem('newPacksList', language);
 			insertElem('oldPacksList', language);
@@ -365,133 +313,64 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			insertElem('countOfWordsTranslated', language);		
 		}
 
-		/*var languagesSelect = (getAllLanguage() || []);
-  		var selectedLanguage = (getCurrentLanguage() || '');
-		
-		var newPacksList = (getElem2('newPacksList', selectedLanguage) || []);
-		var oldPacksList = (getElem2('oldPacksList', selectedLanguage) || []);
-		var newList = (getElem2('newList', selectedLanguage) || []);
-		var activeList = (getElem2('activeList', selectedLanguage) || []);
-		var untouchedList = (getElem2('untouchedList', selectedLanguage) || []);
-		var completedList = (getElem2('completedList', selectedLanguage) || []);
-		var countOfWordsTranslated = (getElem2('countOfWordsTranslated', selectedLanguage) || []);*/
-
-	//*********************** Language **************************
-
-	function Language(name, code) {
-	  	this.name = name;
-	  	this.code = code;
-	}	
-
-	//var languagesSearch = [];
-	/*languagesSearch.push(new Language('Albanian', 'alb'));
-  	languagesSearch.push(new Language('French', 'fre'));
-  	languagesSearch.push(new Language('German', 'ger'));
-  	languagesSearch.push(new Language('Greek', 'gre'));
-  	languagesSearch.push(new Language('Italian', 'ita'));
-  	languagesSearch.push(new Language('Polish', 'pol'));  	  	 	
-  	languagesSearch.push(new Language('Russian', 'rus'));
-  	languagesSearch.push(new Language('Spanish', 'spa'));
-  	languagesSearch.push(new Language('Swedish', 'swe'));*/
-
-	//*********************** RETURN ****************************
+	/*********************** RETURN ***************************
+	All the function that can return something from the factory.
+	These function are called in the app.js file, in the different controllers that need these functions.
+	*/
 
 	return {
 
-		/*getAllElemForLanguage: function(language) {
-			return $q.all([
-				getElem('newPacksList', language, newPacksList),
-				getElem('oldPacksList', language, oldPacksList),
-				getElem('newList', language, newList),
-				getElem('activeList', language, activeList),
-				getElem('untouchedList', language, untouchedList),
-				getElem('completedList', language, completedList),
-				getElem('countOfWordsTranslated', language, countOfWordsTranslated)
-				]);
-		},*/
-
-
-		/*getCurrentLanguageTest: function(callback) {
-			$ionicPlatform.ready(function () {
-				var temp = '';
-				$cordovaSQLite.execute(db, 'SELECT language FROM currentLanguage where id = ?', [1]).then(function(results) {
-					if(results.rows.length > 0) {
-						temp = results.rows.item(0).language;
-						callback(temp);
-					}
-				}, function (err) {
-		            console.error(err);
-		        });
-		    });		
-		},*/
-
-
+		//get the languages the user has already added to the database
 		getLanguages: function() {
 			return getAllLanguages();
-
-			/*$ionicPlatform.ready(function () {
-				$cordovaSQLite.execute(db, 'SELECT * FROM languages').then(function(results) {
-					var temp = false;
-					if(results.rows.length > 0) {
-						temp = false;
-					} else {
-						temp = true;
-					}
-					callback(temp);
-				}, function(err) {
-				       console.error(err);
-				    });
-			});*/
 		},
 
+		//initialize the talbe for the current language
 		initCurrentLanguages: function() {
 			return insertCurrentLanguage('', '');
 		},
 
-
+		//add a new language in the languages table in the database
 		addToLanguages: function(item) {
 			insertLanguages(item.name, item.code);
 			initTable(item.name);
 		},
 
+		//change the current language in the database
 		changeLanguage: function(item) {
-			updateCurrentLanguage(item.language, item.code);
+			return updateCurrentLanguage(item.language, item.code);
 		},
 
-		modifiedActiveList: function(list) {
-			activeList = list;
-			//updateElemInTable('activeList', selectedLanguage, activeList);
-			//saveActiveList();
-		},
-
+		/*get all the packages for the english source language !
+		go to: http://lsir-kamusi.epfl.ch:3000, in order to see all the different requests
+		the $ttp.get function return an angular promise*/
 		getNewPacksListAndWordsList: function() {
 			return $http.get(apiUrl + '/packs/eng/all').then(function(response) {
 				return response.data;
 			});
 		},
 
+		//get the current language from the database
 		getCurrentLanguage: function() {
 			return getCurrentLanguage();
 		},
 
+		//get the code of the current language from the database
 		getCodeCurrentLanguage: function() {
 			return getCodeCurrentLanguage();
 		},
 
+		//get the +/-8000 languages that the user can add in order to translate in these languages
 		getLanguagesSearch: function(callback) {
 		  	$http.get('json/languages.json').success(function (data) {
 				callback(data);
 		    });
-		},		
+		},
 
-		/*getNewPacksList: function() {
-	  		return $http.get(apiUrl + '/packs').then(function(response) {
-	      		return response.data;
-	      	});
-		},*/
+		//*****************Get the different list for the language the user is in the middle of translate********************	
 
 		getNewPacksList: function(language) {
-			return getElem('newPacksList', language, newPacksList);
+			return getElem('newPacksList', language);
 		},
 
 		getUntouchedList: function(language) {
@@ -514,25 +393,23 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			return getElem('completedList', language);
 		},
 
+		/*Remove from untouched list*/
 		removeUntouched: function(itemId) {
 	    	for(var i = 0; i < untouchedList.length; i++) {
 	    		if(untouchedList[i].id === itemId) {
 	    			untouchedList.splice(i, 1);
 	    		}
 	    	}
-	    	//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
-	    	//saveUntouchedList();
 	    	return;
 		},
 
+		/*Remove from active list*/
 		removeActive: function(activeId) {
 	    	for(var i = 0; i < activeList.length; i++) {
 	    		if(activeList[i].id === activeId) {
 	    			activeList.splice(i, 1);
 	    		}
 	    	}
-	    	//updateElemInTable('activeList', selectedLanguage, activeList);
-	    	//saveActiveList();
 	    	return;			
 		},
 
@@ -541,16 +418,10 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		goToWordsListFromUntouched: function(untouchedId) {
 			for(var i = 0; i < untouchedList.length; i++) {
 				if(untouchedList[i].id == untouchedId) {
-					//var wordsList = getWordsList(newList[i].name);
-					//var wordsList = getWordsList2(untouchedList[i].name);
 					activeList.push(new Category(untouchedList[i].name, untouchedList[i].wordsList, untouchedList[i].translations, untouchedList[i].language, untouchedList[i].id));
 					untouchedList.splice(i, 1);
 				}
 			}
-			//updateElemInTable('activeList', selectedLanguage, activeList);
-			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
-			//saveActiveList();
-			//saveUntouchedList();
 			return;			
 		},
 
@@ -560,19 +431,11 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		saveUdpate: function() {
 			for(var i = 0; i < newList.length; i++) {
 				if(newList[i].checked) {
-					//var wordsList = getPromise(newList[i].name);
-					//var wordsList = getWordsList(newList[i].name);
 					activeList.push(new Category(newList[i].name, wordsList, newList[i].translations, newList[i].language, newList[i].id));
 				} else {
 					untouchedList.push(new Category(newList[i].name, '[]', newList[i].translations, newList[i].language, newList[i].id));
 				}
 			}
-			//updateElemInTable('activeList', selectedLanguage, activeList);
-			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
-			//updateElemInTable('oldPacksList', selectedLanguage, newPacksList);
-			//saveActiveList();
-			//saveUntouchedList();
-			//saveOldPacksList();
 			return;
 		},
 
@@ -587,44 +450,36 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 				}
 			}
 			untouchedList = untouchedTemp;
-			//updateElemInTable('activeList', selectedLanguage, activeList);
-			//updateElemInTable('untouchedList', selectedLanguage, untouchedList);
-			//saveActiveList();
-			//saveUntouchedList();
 			return;
 		},
 
+		//Update the oldPacksList table in the local database
 		addToOldPacksList: function(language, oldPacksList) {
-			return updateElem('oldPacksList', language, oldPacksList);
-			
+			return updateElem('oldPacksList', language, oldPacksList);	
 		},
 
-		addToActiveWithWordsList: function(name, wordsList, translations, language, id) {
-			activeList.push(new Category(name, wordsList, translations, language, id));
-			return;
-		},
-
+		//Update the activeList table in the local database
 		addToActive: function(language, activeList) {
 			return updateElem('activeList', language, activeList);
 		},
 
+		//Update the untouchedList in the local database
 		addToUntouched: function(language, untouchedList) {
 			return updateElem('untouchedList', language, untouchedList);
 		},
 
-		addToComplete: function(name, language, id) {
-			completedList.push(new Category(name, [], [], language, id));
-			return;
-		},
-
+		//Function called when we are in the Home view and we want to get new packages
 		updateNewList: function(oldPacksListReceived, newPacksListReceived, language, code) {
 			newPacksList = newPacksListReceived;
 			updateElem('newPacksList', language, newPacksList);
-			//saveNewPacksList();
 			var tempNew = [];
 
 				var tempOld = oldPacksListReceived;
 
+				/*this loop compare the new packages we get from the server with the old list we have received the last time.
+				If we have already received a package we are not going to show it.
+				This function will be probably changed if we will have another way to know if a package is new, or if a term has been added in a package.
+				*/
 				for (var i = 0; i < newPacksList.length; i++) {
 					var notActive = true;
 					for (var j = 0; j < tempOld.length; j++) {
@@ -636,7 +491,6 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 					}
 					if(notActive) {			
 						tempNew.push(new Category2(newPacksList[i].p.cawl_H_ID, newPacksList[i].p.has_parrent, newPacksList[i].p.name, newPacksList[i].wordlist, [], newPacksList[i].p.language, newPacksList[i].p.id));
-						//tempNew.push(new Category(newPacksList[i].name, [], [], newPacksList[i].language, newPacksList[i].id));
 					}
 				}
 
@@ -648,10 +502,11 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			    	tempNew[i] = packTemp;
 			    }
 
+			    //when we know the new list we can update it in the database.
 			    updateElem('newList', language, tempNew);
 			    
+			    //we return this new List, in order to get the number of new packages we have got and to show it in the home view.
 			    return tempNew;
-				//saveNewList();
 		},
 
 		//******************** TEST INTEGRATION LISTSTORE **********************************
@@ -664,52 +519,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 			return updateElem('countOfWordsTranslated', language, countOfWordsTranslated)
 		},
 
-		getLanguageUser: function() {
-			return selectedLanguage;
-		},
-
-		postTranslation: function(pack) {
-			//$http.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
-			$http.defaults.headers.post["Content-Type"] = "application/json";
-			/*var wordsListTemp = [];
-			var translationsTemp = [];
-			var translationsToSend = [];
-
-			for(var i = 0; i< pack.translations.length; i++) {
-				if(pack.translations[i].translation == '') {
-					wordsListTemp.push(new WordsList(pack.wordsList[i].language, pack.wordsList[i].term, pack.wordsList[i].id));
-					translationsTemp.push(new Translation(pack.translations[i].termId, pack.translations[i].dstLanguage, pack.translations[i].translation));	
-				} else {
-					translationsToSend.push(new Translation(pack.translations[i].termId, pack.translations[i].dstLanguage, pack.translations[i].translation));
-				}
-			}
-
-			for(var i = 0; i < activeList.length; i++) {
-				if(activeList[i].id == pack.id) {
-					activeList[i].translations = translationsTemp;
-					activeList[i].wordsList = wordsListTemp;
-				}
-			}
-			//updateElemInTable('activeList', selectedLanguage, activeList);
-			//saveActiveList();*/
-
-			//countOfWordsTranslated = countOfWordsTranslated + translationsToSend.length;
-			//updateElemInTable('countOfWordsTranslated', selectedLanguage, countOfWordsTranslated);
-			//saveCount();
-
-		    $http.post(apiUrl + "/translate/json", {translations: translationsToSend}).then(function(response) {
-		      console.log(response);
-		    }).catch(function(err) {
-		      console.error(err.data);
-		    });
-
-		    console.log(translationsToSend);
-
-		    addToComplete(pack);
-
-			return;
-		},
-
+		//when the user decide to send to the server his/her translation we call this function.
 		postTranslation2: function(translationsToSend) {
 			$http.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -720,7 +530,6 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 		    });
 		},
 
-		//ex getCategory 
 	    getPack: function(packId) {
 	      for (var i = 0; i < activeList.length; i++) {
 	        if(activeList[i].id == packId) {
@@ -730,7 +539,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	      return undefined;
 	    },
 
-
+	    //with a package and the id of a word, we return the word to translate
 	    getWordToTrans: function(pack, wordId) {
 	      for (var i = 0; i < pack.wordsList.length; i++) {
 	        if(pack.wordsList[i].id == wordId) {
@@ -740,6 +549,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	      return undefined;      
 	    },
 
+	    //with a package and the id of a word, we return the index of this word
 	    getCurrentWordIndex: function(pack, wordId) {
 		  for (var i = 0; i < pack.wordsList.length; i++) {
 	        if(pack.wordsList[i].id == wordId) {
@@ -752,24 +562,6 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 	    nextWordId: function(pack, nextWordIndex) {
 	    	return pack.wordsList[nextWordIndex].id;
 	    },
-
-	    /*getTranslation: function(category, wordId) {
-	    	for(var i = 0; i < category.translations.length; i++) {
-	    		if(category.translations[i].termId == wordId) {
-	    			return category.translations[i].translation;
-	    		}
-	    	}
-	    },
-
-	    addToTranslationList: function(category, wordId, translation) {
-	    	for(var i = 0; i < category.translations.length; i++) {
-	    		if(category.translations[i].termId == wordId) {
-	    			category.translations[i].translation = translation;
-	    		}
-	    	}
-	    	persist();
-	    	return;	
-	    },*/
 
 	    skipWordsList: function(pack, index) {
 	    	addToComplete(pack);

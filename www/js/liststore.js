@@ -1,3 +1,6 @@
+/*
+First service that we have used in the app script, it is no longer used in the app
+*/
 angular.module('kamusiapp.liststore', [])
 
 	.factory('ListStore', ['$http', 'HomeStore', function($http, HomeStore) {
