@@ -7,6 +7,8 @@
 // the 2nd parameter is an array of 'requires'
 var app = angular.module('kamusiapp', ['ionic', 'kamusiapp.liststore', 'kamusiapp.homestore', 'kamusiapp.localdb', 'jett.ionic.filter.bar'])
 
+/*Configuration of the app
+we define the different state of the application, and the controller that defined each view*/
 app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
 
   $ionicConfigProvider.backButton.text('').previousTitleText(false);
@@ -135,8 +137,12 @@ app.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
 app.controller('AppCtrl', ['$scope', 'HomeStore', function($scope, HomeStore) {
 }]);
 
+//the controller of the Home view
 app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPopup', '$ionicLoading', function($scope, HomeStore, $state, $http, $ionicPopup, $ionicLoading) {
 
+    /*when we are on this view we verify if it is the first time that we start the app
+    If it is the first time we go the the settings view, in order to ask the user for a first destination language
+    Otherwise we get from the phone all the lists we need from the mobile database, and we look if there are new packages*/
     $scope.$on('$ionicView.enter', function(e) {
         HomeStore.getLanguages().then(function(languages){
           if(languages.length == 0) {
@@ -156,6 +162,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
         });
     })
 
+  //Open a popup in order to alert the user that there is no access to the Kamusi server
   $scope.showAlert = function() {
     $ionicPopup.alert({
       title: 'Error',
@@ -165,6 +172,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     });
   };
 
+  //Open a loading bar when the new words are downloaded from the server
   $scope.showLoading = function() {
     $ionicLoading.show({
       template: '<ion-spinner icon="lines"></ion-spinner>'
@@ -210,6 +218,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     });
   }
 
+  /*function that can count the number of main parrents packages*/
   function length(list) {
     var count = 0;
     angular.forEach(list, function(child) {
@@ -374,7 +383,7 @@ app.controller('CompletedCtrl', ['$scope', 'HomeStore', function($scope, HomeSto
   $scope.completedList = HomeStore.getCompletedList();
 }]);
 
-app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', function($http, $scope, ListStore, HomeStore) {
+app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', '$rootScope', '$ionicPlatform', '$state', function($http, $scope, ListStore, HomeStore, $rootScope, $ionicPlatform, $state) {
 
   var untouchedList = [];
   HomeStore.getCurrentLanguage().then(function(currentLanguage) {
@@ -411,8 +420,36 @@ app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', fun
       $scope.mainList = activeListTemp;
       HomeStore.addToUntouched(currentLanguage, untouchedListTemp);
     });
-
   };
+
+ // run this function when either hard or soft back button is pressed
+  var doCustomBack = function() {
+      console.log("custom BACK mainList");
+      $state.go('app.home');
+  };
+
+  // override soft back
+  // framework calls $rootScope.$ionicGoBack when soft back button is pressed
+  var oldSoftBack = $rootScope.$ionicGoBack;
+  $rootScope.$ionicGoBack = function() {
+      doCustomBack();
+  };
+  var deregisterSoftBack = function() {
+      $rootScope.$ionicGoBack = oldSoftBack;
+  };
+
+  // override hard back
+  // registerBackButtonAction() returns a function which can be used to deregister it
+  var deregisterHardBack = $ionicPlatform.registerBackButtonAction(
+      doCustomBack, 101
+  );
+
+  // cancel custom back behaviour
+  /*$scope.$on('$destroy', function() {
+      console.log('in destroy');
+      deregisterHardBack();
+      deregisterSoftBack();
+  });*/
 
 }]);
 
@@ -459,15 +496,16 @@ app.controller('SideListCtrl', ['$scope', '$state', 'HomeStore', '$rootScope', '
 
   // run this function when either hard or soft back button is pressed
   var doCustomBack = function() {
-      console.log("custom BACK");
-      /*console.log(cawlId);
+      console.log("custom BACK sideList");
+
+      console.log(cawlId);
       var index = cawlId.lastIndexOf('.');
       if(index != -1) {
         var cawlIdFinal = cawlId.slice(0, index);
         $state.go('app.sideList', {cawlId: cawlIdFinal});        
-      } else {*/
+      } else {
         $state.go('app.mainList');
-      //}
+      }
   };
 
   // override soft back
@@ -487,10 +525,10 @@ app.controller('SideListCtrl', ['$scope', '$state', 'HomeStore', '$rootScope', '
   );
 
   // cancel custom back behaviour
-  $scope.$on('$destroy', function() {
+  /*$scope.$on('$destroy', function() {
       deregisterHardBack();
       deregisterSoftBack();
-  });
+  });*/
 
 }]);
 
@@ -563,15 +601,16 @@ app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'Home
 
    // run this function when either hard or soft back button is pressed
   var doCustomBack = function() {
-      console.log("custom BACK");
-      /*console.log(cawlId);
+      console.log("custom BACK wordsList");
+      
+      console.log(cawlId);
       var index = cawlId.lastIndexOf('.');
       if(index != -1) {
         var cawlIdFinal = cawlId.slice(0, index);
         $state.go('app.sideList', {cawlId: cawlIdFinal});        
-      } else {*/
+      } else {
         $state.go('app.mainList');
-      //}
+      }
   };
 
   // override soft back
@@ -591,10 +630,10 @@ app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'Home
   );
 
   // cancel custom back behaviour
-  $scope.$on('$destroy', function() {
+  /*$scope.$on('$destroy', function() {
       deregisterHardBack();
       deregisterSoftBack();
-  });
+  });*/
 
 }]);
 
@@ -603,6 +642,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
   var categoryId = $state.params.categoryId;
   var activeListTemp = [];
   var nextWordIndex = 0;
+  var previousWordIndex = 0;
 
   HomeStore.getCurrentLanguage().then(function(currentLanguage) {
     HomeStore.getActiveList(currentLanguage).then(function(activeList) {
@@ -615,7 +655,8 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
           $scope.currentWordIndex = HomeStore.getCurrentWordIndex($scope.category, $scope.word.id);
           $scope.currentWordNumber = parseInt($scope.currentWordIndex) + 1 + '';
 
-          nextWordIndex = parseInt($scope.currentWordIndex) + 1 + ''; 
+          nextWordIndex = parseInt($scope.currentWordIndex) + 1 + '';
+          previousWordIndex = parseInt($scope.currentWordIndex) - 1 + '';
 
           $scope.catTest = angular.copy(child);
 
@@ -646,24 +687,57 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.addToActive(currentLanguage, activeListTemp).then(function() {
 
-        if (nextWordIndex < $scope.category.wordsList.length) {
+        /*if (nextWordIndex < $scope.category.wordsList.length) {
           var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
           $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
         } else {
           $state.go('app.wordsList', {categoryId: categoryId});
-        }
+        }*/
+        $scope.later();
 
       })
     })
  };
 
-  $scope.later = function() {
+  $scope.translateGoBack = function() {
 
+    for(var i = 0; i<activeListTemp.length; i++) {
+      if(activeListTemp[i].id == $scope.catTest.id) {
+        activeListTemp[i] = $scope.catTest;
+      }
+    }
+
+    HomeStore.getCurrentLanguage().then(function(currentLanguage) {
+      HomeStore.addToActive(currentLanguage, activeListTemp).then(function() {
+
+        /*if(previousWordIndex < 0) {
+          $state.go('app.wordsList', {categoryId: categoryId});
+        } else {
+          var previousWordId = HomeStore.nextWordId($scope.category, previousWordIndex);
+          $state.go('app.wordTrans', {categoryId: categoryId, wordId: previousWordId});
+        }*/
+        $scope.laterGoBack();
+
+      })
+    })    
+
+  };
+
+  $scope.later = function() {
     if (nextWordIndex < $scope.category.wordsList.length) {
       var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
       $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
     } else {
       $state.go('app.wordsList', {categoryId: categoryId});
+    }
+  };
+
+  $scope.laterGoBack = function() {
+    if(previousWordIndex < 0) {
+      $state.go('app.wordsList', {categoryId: categoryId});
+    } else {
+      var previousWordId = HomeStore.nextWordId($scope.category, previousWordIndex);
+      $state.go('app.wordTrans', {categoryId: categoryId, wordId: previousWordId});
     }
   };
 
@@ -685,7 +759,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
           var nextWordId = HomeStore.nextWordId($scope.category, currentWordIndexTemp);
           $state.go('app.wordTrans', {categoryId: categoryId, wordId: nextWordId});
         } else {
-          $state.go('app.home');
+          $state.go('app.wordsList', {categoryId: categoryId});
         }
         HomeStore.skipWordsList($scope.category);
       })
@@ -697,11 +771,19 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
     if($scope.catTest.translations[$scope.currentWordIndex].translation == '') {
       $scope.later();
     } else {
-      $scope.showConfirm();
+      $scope.showConfirm(true);
     }   
   };
 
- $scope.showConfirm = function() {
+  $scope.onSwipeLeft = function() {
+    if($scope.catTest.translations[$scope.currentWordIndex].translation == '') {
+      $scope.laterGoBack();
+    } else {
+      $scope.showConfirm(false);
+    }
+  };
+
+ $scope.showConfirm = function(OnRight) {
    var confirmPopup = $ionicPopup.confirm({
      title: 'Save',
      template: '<p align="center">' + $scope.catTest.translations[$scope.currentWordIndex].translation + '</p>'
@@ -710,7 +792,11 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
    confirmPopup.then(function(res) {
      if(res) {
        console.log('You are sure');
-       $scope.translate();
+       if(OnRight) {
+        $scope.translate();
+      } else {
+        $scope.translateGoBack();
+      }       
      } else {
        console.log('You are not sure');
      }
@@ -719,7 +805,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
 
    // run this function when either hard or soft back button is pressed
   var doCustomBack = function() {
-      console.log("custom BACK");
+      console.log("custom BACK wordsTrans");
       $state.go('app.wordsList', {categoryId: $state.params.categoryId});
   };
 
@@ -740,10 +826,27 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
   );
 
   // cancel custom back behaviour
-  $scope.$on('$destroy', function() {
+  /*$scope.$on('$destroy', function() {
       deregisterHardBack();
       deregisterSoftBack();
-  });
+  });*/
+
+  $scope.pos = function(p) { 
+    if (p=='n') {return 'noun'; 
+    } else if (p=='a') { return 'adjective'; 
+    } else if (p=='v') { return 'verb'; 
+    } else if (p=='r') { return 'adverb'; 
+    } else if (p=='nn') { return 'noun'; 
+    } else if (p=='aj') { return 'adjective'; 
+    } else if (p=='av') { return 'adverb'; 
+    } else if (p=='vb') { return 'verb'; 
+    } else if (p=='cj') { return 'conjucation'; 
+    } else if (p=='ij') { return 'interjection'; 
+    } else if (p=='ig') { return 'interrogative'; 
+    } else if (p=='pr') { return 'pronoun'; 
+    } else if (p=='pp') { return 'preposition'; 
+    }else {return p;};
+  };
 
 }]);
 
@@ -797,7 +900,9 @@ app.controller('SettingsCtrl', ['$scope', '$ionicModal', '$ionicFilterBar', 'Hom
   };
 
   $scope.changeLanguage = function(item) {
-    HomeStore.changeLanguage(item);
+    HomeStore.changeLanguage(item).then(function() {
+      $state.go('app.home');
+    });
   };
 
     $scope.showFilterBar = function () {
