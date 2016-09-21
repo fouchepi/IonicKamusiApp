@@ -179,13 +179,16 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     });
   };
 
+  //Stop the loading bar
   $scope.hideLoading = function(){
     $ionicLoading.hide();
   };
 
+  //called when we need to update all the lists
   $scope.update = function(language, code) {
 
-
+    /*call the different function of the homestore service in order to get the list of new words (and its length).
+    All the function are explains in the homestore service*/
     HomeStore.getNewPacksListAndWordsList().then(function(newPacksListReceived) {
       HomeStore.getOldPacksList(language).then(function(oldPacksList) {
         var newList = HomeStore.updateNewList(oldPacksList, newPacksListReceived, language, code);
@@ -196,12 +199,15 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     }).catch(function(err) {
       console.error(err);
       $scope.showAlert();
+      //if we can't reach the server we used the most recent list
       HomeStore.getNewList(language).then(function(newList) {
         $scope.newList = newList;
         $scope.newListLength = length($scope.newList);
       });      
       $scope.hideLoading();
     });  
+
+    //***call the function of homestore in order to get all the lists and their length***
 
     HomeStore.getUntouchedList(language).then(function(untouchedList) {
       $scope.untouchedList = untouchedList;
@@ -229,6 +235,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
     return count;
   }
 
+//**** the function we call when a button is pressed in order to go in the proper view. Call in the home html file. ****
 
   $scope.new = function() {
     $state.go('app.new');
@@ -248,6 +255,7 @@ app.controller('HomeCtrl', ['$scope', 'HomeStore', '$state', '$http', '$ionicPop
 
 }]);
 
+//the controller of the new list view (when we press the new button)
 app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($http, $state, $scope, HomeStore) {
    
   $scope.refresh = function() {
@@ -260,20 +268,26 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
 
   $scope.refresh();
 
+  /*Called when we press the save button (see the new html file).
+  Distribute the parents packages in activeList and untouchedList according to what the user has checked*/
   $scope.save = function() {
 
     var activeList = [];
     var untouchedList = [];
+
     angular.forEach($scope.packsList, function(child) {
       if(child.checked) {
         activeList.push(child);
       } else {
+        /*As we got all the packages in the same way but we show only the parents, we are sure that all the children are not checked.
+        However we don't want to add them to the untouched list.*/
         if(!child.has_parrent) {
           untouchedList.push(child);
         }
       }
     });
 
+    //used to add to the activeList and the untouchedList, the children of the parents we have added previously (according to the call_H_ID we got from the server)
     function fillList(packsList, list) {
       var listTemp = [];
       angular.forEach(list, function(listChild) {
@@ -296,6 +310,7 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
     activeList = fillList($scope.packsList, activeList);
     untouchedList = fillList($scope.packsList, untouchedList);
 
+    //saved all the list in the local database (according to the language the user is working with at this moment) and the app go to the list of the parents the user has checked
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.getNewPacksList(currentLanguage).then(function(newPacksList) {
         HomeStore.addToOldPacksList(currentLanguage, newPacksList);
@@ -309,9 +324,12 @@ app.controller('NewCtrl', ['$http', '$state', '$scope', 'HomeStore', function($h
 
 }]);
 
+//Controller of the untouched view (when we press the untouched button in the home view)
 app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scope, $state, HomeStore) {
 
   var activeList = [];
+
+  //we get the untouchedlist and the activelist from the local database (according to the language the user is working with at this moment)
   HomeStore.getCurrentLanguage().then(function(currentLanguage)  {
     HomeStore.getUntouchedList(currentLanguage).then(function(untouchedList) {
       $scope.untouchedList = untouchedList;
@@ -321,10 +339,12 @@ app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scop
     })
   })
 
+  //When the user select a package from this list we add it in the activeList and we go directly there in order to work on it.
   $scope.goToWordsListFromUntouched = function(cawl_H_ID) {
     var untouchedListTemp = [];
     var activeListTemp = activeList;
 
+    //it is the same as previsouly in order to add the selected package but its children too (with the cawl_H_ID)
     angular.forEach($scope.untouchedList, function(child, index) {
       var temp = child.cawl_H_ID.indexOf('.');
       if(temp != -1) {
@@ -341,6 +361,7 @@ app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scop
       }
     });
 
+    //Then we save in the local database the untouchedList and the activeList
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.addToUntouched(currentLanguage, untouchedListTemp);
       $scope.untouchedList = untouchedListTemp;
@@ -349,6 +370,7 @@ app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scop
     });
   };
 
+  //when we press the red garbage can icon on a package (we decide to delete this package and all its children)
   $scope.remove = function(cawl_H_ID) {
     var untouchedListTemp = [];
 
@@ -366,6 +388,7 @@ app.controller('UntouchedCtrl', ['$scope', '$state', 'HomeStore', function($scop
 
     console.log(untouchedListTemp);
 
+    //Then we save the untouchedList in the local database
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.addToUntouched(currentLanguage, untouchedListTemp);
       $scope.untouchedList = untouchedListTemp;
@@ -383,9 +406,12 @@ app.controller('CompletedCtrl', ['$scope', 'HomeStore', function($scope, HomeSto
   $scope.completedList = HomeStore.getCompletedList();
 }]);
 
+//Controller of the activeList view. When we press the active button in the home view.
 app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', '$rootScope', '$ionicPlatform', '$state', function($http, $scope, ListStore, HomeStore, $rootScope, $ionicPlatform, $state) {
 
   var untouchedList = [];
+
+  //we get from the local database the activeList we have to show (only the parents / ng-if in the mainList html file)
   HomeStore.getCurrentLanguage().then(function(currentLanguage) {
     HomeStore.getActiveList(currentLanguage).then(function(activeList) {
       $scope.mainList = activeList;
@@ -395,6 +421,7 @@ app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', '$r
     }); 
   })
 
+  //when we press the hide icon on the package band. We save it and its children in the untouchedList
   $scope.remove = function(cawl_H_ID) {
     var activeListTemp = [];
     var untouchedListTemp = untouchedList;
@@ -415,6 +442,7 @@ app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', '$r
       }
     });
 
+    //Then we save the untouchedList to the local database
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.addToActive(currentLanguage, activeListTemp);
       $scope.mainList = activeListTemp;
@@ -453,6 +481,7 @@ app.controller('MainListCtrl', ['$http', '$scope', 'ListStore', 'HomeStore', '$r
 
 }]);
 
+//Controller of the child view (used every time we select a child package that has also children)
 app.controller('SideListCtrl', ['$scope', '$state', 'HomeStore', '$rootScope', '$ionicPlatform', function($scope, $state, HomeStore, $rootScope, $ionicPlatform) {
 
   var cawlId = $state.params.cawlId;
@@ -532,6 +561,7 @@ app.controller('SideListCtrl', ['$scope', '$state', 'HomeStore', '$rootScope', '
 
 }]);
 
+//When we finaly arrive to a child that doesn't have children we can access to its list of words that we want to translate
 app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'HomeStore', '$rootScope', '$ionicPlatform',  function($scope, $state, ListStore, $http, HomeStore, $rootScope, $ionicPlatform) {
 
   var categoryId = $state.params.categoryId;
@@ -551,11 +581,14 @@ app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'Home
     })
   });
 
+  //In order to see if the user has already translate this word (a check icon appears - in the wordsList html file)
   $scope.save = function(wordId) {
     var currentWordIndex = HomeStore.getCurrentWordIndex($scope.category, wordId)
     return HomeStore.alreadyTranslate($scope.category, currentWordIndex);
   };
 
+  /*When users are sure of their translation they can post them to the Kamusi server.
+  Then we delete them from the app in order that they can't send them twice*/
   $scope.postTranslation = function() {
     var wordsListTemp = [];
     var translationsTemp = [];
@@ -586,6 +619,7 @@ app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'Home
     console.log(translationsToSend);
     console.log(activeListTemp);
 
+    //We increase the number of words the users have transalted since they used the app. And we save this count in the local database
     HomeStore.getCurrentLanguage().then(function(currentLanguage) {
       HomeStore.addToActive(currentLanguage, activeListTemp);
       HomeStore.getCountOfWordsTranslated(currentLanguage).then(function(count) {
@@ -637,6 +671,7 @@ app.controller('WordsListCtrl', ['$scope', '$state', 'ListStore', '$http', 'Home
 
 }]);
 
+//The controller of the translation view (when we have selected a word to translate in the list)
 app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore', '$ionicPopup', '$rootScope', '$ionicPlatform', function($scope, $state, $ionicHistory, HomeStore, $ionicPopup, $rootScope, $ionicPlatform) {
 
   var categoryId = $state.params.categoryId;
@@ -644,6 +679,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
   var nextWordIndex = 0;
   var previousWordIndex = 0;
 
+  //we get the word we want to translate and its index in order to know the next and the previous ones
   HomeStore.getCurrentLanguage().then(function(currentLanguage) {
     HomeStore.getActiveList(currentLanguage).then(function(activeList) {
       activeListTemp = activeList
@@ -675,7 +711,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
 
   $scope.catTest = angular.copy(HomeStore.getPack($state.params.categoryId));*/
 
-
+  //called when we press the green button, the transaltion is saved
   $scope.translate = function() {
 
     for(var i = 0; i<activeListTemp.length; i++) {
@@ -723,6 +759,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
 
   };
 
+  //Called when we press the orange button. We keep a word to translate for later.
   $scope.later = function() {
     if (nextWordIndex < $scope.category.wordsList.length) {
       var nextWordId = HomeStore.nextWordId($scope.category, nextWordIndex);
@@ -741,6 +778,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
     }
   };
 
+  //When we definitly don't know a word we press the red button and the word is deleted.
   $scope.skip = function() {
     var currentWordIndexTemp = $scope.currentWordIndex;
     console.log($scope.category.wordsList[currentWordIndexTemp].term);
@@ -767,6 +805,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
     
   };
 
+  //Called when we swipe right. Then we save the translation but we ask confirmation first
   $scope.onSwipeRight = function() {
     if($scope.catTest.translations[$scope.currentWordIndex].translation == '') {
       $scope.later();
@@ -775,6 +814,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
     }   
   };
 
+  //Called when we swipe left. We keep the word for later
   $scope.onSwipeLeft = function() {
     if($scope.catTest.translations[$scope.currentWordIndex].translation == '') {
       $scope.laterGoBack();
@@ -831,6 +871,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
       deregisterSoftBack();
   });*/
 
+  //Code from Sina, shortcut he creates in order to know the type of the word (get from the server)
   $scope.pos = function(p) { 
     if (p=='n') {return 'noun'; 
     } else if (p=='a') { return 'adjective'; 
@@ -850,6 +891,7 @@ app.controller('WordTransCtrl', ['$scope', '$state', '$ionicHistory', 'HomeStore
 
 }]);
 
+//COntroller of the setting view. The language selection.
 app.controller('SettingsCtrl', ['$scope', '$ionicModal', '$ionicFilterBar', 'HomeStore', '$state', function($scope, $ionicModal, $ionicFilterBar, HomeStore, $state) {
 
   var filterBarInstance;

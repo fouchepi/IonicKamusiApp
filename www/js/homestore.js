@@ -343,7 +343,7 @@ angular.module('kamusiapp.homestore', ['ngCordova'])
 
 		/*get all the packages for the english source language !
 		go to: http://lsir-kamusi.epfl.ch:3000, in order to see all the different requests
-		the $ttp.get function return an angular promise*/
+		the $http.get function return an angular promise*/
 		getNewPacksListAndWordsList: function() {
 			return $http.get(apiUrl + '/packs/eng/all').then(function(response) {
 				return response.data;
